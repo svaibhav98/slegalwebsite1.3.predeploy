@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,15 +19,37 @@ const COLORS = {
   textPrimary: '#1A1A2E',
   textSecondary: '#6B7280',
   warning: '#F59E0B',
+  success: '#10B981',
 };
 
 export default function VerificationPendingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { lawyerName, submittedDate } = params;
+  
+  // Generate application reference ID
+  const generateRefId = () => {
+    const timestamp = Date.now().toString().slice(-6);
+    return `SL-${timestamp}`;
+  };
 
-  const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const displayDate = submittedDate || currentDate;
+  const applicationRefId = generateRefId();
+  const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleDateString('en-IN', { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const handleDownloadReceipt = () => {
+    // Show alert for now (PDF generation would require additional library)
+    Alert.alert(
+      'Receipt Download',
+      `Your acknowledgement receipt has been generated.\n\nApplication ID: ${applicationRefId}\n\nIn a production app, this would download a PDF file with your submission details.`,
+      [{ text: 'OK', style: 'default' }]
+    );
+  };
 
   return (
     <>
@@ -42,39 +65,84 @@ export default function VerificationPendingScreen() {
           {/* Icon */}
           <View style={styles.iconContainer}>
             <LinearGradient
-              colors={[COLORS.warning, '#D97706']}
+              colors={[COLORS.success, '#059669']}
               style={styles.iconGradient}
             >
-              <Ionicons name="time" size={60} color={COLORS.white} />
+              <Ionicons name="checkmark-circle" size={60} color={COLORS.white} />
             </LinearGradient>
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>Verification Pending</Text>
-          <Text style={styles.subtitle}>Your application has been submitted successfully</Text>
+          <Text style={styles.title}>Verification Submitted</Text>
+          <Text style={styles.subtitle}>
+            Your application has been received and is currently under verification.{'\n'}
+            This process usually takes 24–48 hours.
+          </Text>
 
-          {/* Info Card */}
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
+          {/* Application Reference Card */}
+          <View style={styles.refCard}>
+            <Text style={styles.refLabel}>Application Reference ID</Text>
+            <Text style={styles.refId}>{applicationRefId}</Text>
+            <Text style={styles.refNote}>Please save this ID for future reference</Text>
+          </View>
+
+          {/* Submission Summary */}
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryTitle}>Submission Summary</Text>
+            
+            <View style={styles.summaryRow}>
               <Ionicons name="person" size={20} color={COLORS.primary} />
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Submitted By</Text>
-                <Text style={styles.infoValue}>{lawyerName || 'Lawyer Profile'}</Text>
+              <View style={styles.summaryContent}>
+                <Text style={styles.summaryLabel}>Lawyer Name</Text>
+                <Text style={styles.summaryValue}>{params.lawyerName || 'N/A'}</Text>
               </View>
             </View>
 
             <View style={styles.divider} />
 
-            <View style={styles.infoRow}>
+            <View style={styles.summaryRow}>
+              <Ionicons name="call" size={20} color={COLORS.primary} />
+              <View style={styles.summaryContent}>
+                <Text style={styles.summaryLabel}>Contact</Text>
+                <Text style={styles.summaryValue}>As per form submission</Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.summaryRow}>
+              <Ionicons name="location" size={20} color={COLORS.primary} />
+              <View style={styles.summaryContent}>
+                <Text style={styles.summaryLabel}>Location</Text>
+                <Text style={styles.summaryValue}>As per form submission</Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.summaryRow}>
               <Ionicons name="calendar" size={20} color={COLORS.primary} />
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Submission Date</Text>
-                <Text style={styles.infoValue}>{displayDate}</Text>
+              <View style={styles.summaryContent}>
+                <Text style={styles.summaryLabel}>Submission Date & Time</Text>
+                <Text style={styles.summaryValue}>{formattedDate}</Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.summaryRow}>
+              <Ionicons name="hourglass" size={20} color={COLORS.warning} />
+              <View style={styles.summaryContent}>
+                <Text style={styles.summaryLabel}>Status</Text>
+                <View style={styles.statusBadge}>
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>Pending Verification</Text>
+                </View>
               </View>
             </View>
           </View>
 
-          {/* What's Next Section */}
+          {/* What's Next */}
           <View style={styles.nextStepsCard}>
             <Text style={styles.nextStepsTitle}>What Happens Next?</Text>
             
@@ -83,9 +151,9 @@ export default function VerificationPendingScreen() {
                 <Text style={styles.stepNumberText}>1</Text>
               </View>
               <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>Verification Review</Text>
+                <Text style={styles.stepTitle}>Document Verification</Text>
                 <Text style={styles.stepDescription}>
-                  Our team will review your credentials and submitted documents
+                  Our team will verify your credentials and submitted documents
                 </Text>
               </View>
             </View>
@@ -95,9 +163,9 @@ export default function VerificationPendingScreen() {
                 <Text style={styles.stepNumberText}>2</Text>
               </View>
               <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>Email Notification</Text>
+                <Text style={styles.stepTitle}>Notification</Text>
                 <Text style={styles.stepDescription}>
-                  You'll receive an email once verification is complete (usually 2-3 business days)
+                  You'll receive an email and SMS once verification is complete (24-48 hours)
                 </Text>
               </View>
             </View>
@@ -115,35 +183,26 @@ export default function VerificationPendingScreen() {
             </View>
           </View>
 
-          {/* Note */}
-          <View style={styles.noteBox}>
-            <Ionicons name="information-circle" size={20} color={COLORS.warning} />
-            <Text style={styles.noteText}>
-              Verification typically takes 2-3 business days. We'll notify you via email and SMS.
-            </Text>
-          </View>
-
           {/* Action Buttons */}
           <TouchableOpacity 
-            style={styles.primaryButton}
-            onPress={() => router.push('/(tabs)/home')}
+            style={styles.downloadButton}
+            onPress={handleDownloadReceipt}
           >
-            <Text style={styles.primaryButtonText}>Back to Home</Text>
+            <Ionicons name="download" size={20} color={COLORS.white} />
+            <Text style={styles.downloadButtonText}>Download Acknowledgement Receipt</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.secondaryButton}
-            onPress={() => router.back()}
+            style={styles.homeButton}
+            onPress={() => router.push('/(tabs)/home')}
           >
-            <Text style={styles.secondaryButtonText}>View Submission</Text>
+            <Text style={styles.homeButtonText}>Back to Home</Text>
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
         </ScrollView>
       </View>
-    </>
-  );
-}
+    </>\n  );\n}
 
 const styles = StyleSheet.create({
   container: {
