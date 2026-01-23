@@ -87,6 +87,11 @@ export default function LoginScreen() {
               <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSendOTP} disabled={loading} activeOpacity={0.8}>
                 <Text style={styles.buttonText}>{loading ? 'Sending OTP...' : 'Send OTP'}</Text>
               </TouchableOpacity>
+              
+              {/* Guest Mode Button */}
+              <TouchableOpacity style={styles.guestButton} onPress={handleGuestMode} activeOpacity={0.8}>
+                <Text style={styles.guestButtonText}>Continue as Guest</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <>
