@@ -1,80 +1,240 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Linking,
+  Dimensions,
+} from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { getLawSchemeById, getRelatedLawsSchemes, LawScheme } from '../../services/lawsData';
+
+const { width } = Dimensions.get('window');
+
+// Design System Colors
+const COLORS = {
+  headerBg: '#2B2D42',
+  primary: '#FF9933',
+  white: '#FFFFFF',
+  textPrimary: '#1A1A2E',
+  textSecondary: '#6B7280',
+  textMuted: '#9CA3AF',
+  border: '#E5E7EB',
+  surface: '#FFFFFF',
+  background: '#F9FAFB',
+  link: '#3B82F6',
+};
 
 export default function LawDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const id = params.id as string;
+  
+  const [lawItem, setLawItem] = useState<LawScheme | null>(null);
+  const [relatedItems, setRelatedItems] = useState<LawScheme[]>([]);
 
-  const lawDetails: any = {
-    tenancy: {
-      title: 'Tenancy Laws',
-      icon: 'home',
-      content: 'Tenants in India are protected under state Rent Acts and the Model Tenancy Act, 2021. Key rights include a written rental agreement, fair rent, peaceful possession, and refund of security deposit. Landlords must follow due process for eviction.\n\nTenants must pay rent on time, maintain the property, and avoid unauthorized changes.',
-      link: 'https://mohua.gov.in',
-      related: [
-        { icon: 'business', title: 'Land & Property Laws' },
-        { icon: 'document-text', title: 'Tenancy Laws' },
-        { icon: 'leaf', title: 'Farmer Schemes' },
-      ]
-    },
-    consumer: {
-      title: 'Consumer Protection Act',
-      icon: 'cart',
-      content: 'The Consumer Protection Act, 2019 protects consumers against unfair trade practices, defective goods, and deficient services. It provides for consumer tribunals at district, state, and national levels.\n\nKey rights include: Right to safety, Right to information, Right to choose, Right to be heard, Right to seek redressal.',
-      link: 'https://consumeraffairs.nic.in',
-      related: [
-        { icon: 'shield-checkmark', title: 'Consumer Rights' },
-        { icon: 'document-text', title: 'E-commerce Rules' },
-        { icon: 'card', title: 'Payment Disputes' },
-      ]
-    },
+  useEffect(() => {
+    if (id) {
+      const item = getLawSchemeById(id);
+      if (item) {
+        setLawItem(item);
+        setRelatedItems(getRelatedLawsSchemes(item, 4));
+      }
+    }
+  }, [id]);
+
+  const handleBack = () => {
+    router.back();
   };
 
-  const law = lawDetails[params.id as string] || lawDetails.tenancy;
+  const handleOpenLink = async (url: string) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log("Cannot open URL:", url);
+      }
+    } catch (error) {
+      console.error("Error opening URL:", error);
+    }
+  };
 
-  const handleOpenLink = () => {
-    Linking.openURL(law.link);
+  const handleRelatedPress = (item: LawScheme) => {
+    router.push({
+      pathname: '/law-detail/[id]',
+      params: { id: item.id }
+    });
+  };
+
+  if (!lawItem) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Parse overview text to display with proper formatting
+  const formatOverviewText = (text: string) => {
+    return text.split('\n').map((paragraph, index) => {
+      // Check if it's a heading (starts with **)
+      if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+        return (
+          <Text key={index} style={styles.overviewHeading}>
+            {paragraph.replace(/\*\*/g, '')}
+          </Text>
+        );
+      }
+      // Check if it's a bullet point
+      if (paragraph.trim().startsWith('•')) {
+        return (
+          <Text key={index} style={styles.overviewBullet}>
+            {paragraph}
+          </Text>
+        );
+      }
+      // Check if it's a numbered item
+      if (/^\d+\./.test(paragraph.trim())) {
+        return (
+          <Text key={index} style={styles.overviewBullet}>
+            {paragraph}
+          </Text>
+        );
+      }
+      // Regular paragraph
+      if (paragraph.trim()) {
+        return (
+          <Text key={index} style={styles.overviewParagraph}>
+            {paragraph.replace(/\*\*/g, '')}
+          </Text>
+        );
+      }
+      return null;
+    });
   };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.headerBg} />
+      
       <View style={styles.container}>
+        {/* Dark Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.8}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBack}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={22} color={COLORS.white} />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.titleSection}>
-          <View style={styles.iconCircle}>
-            <Ionicons name={law.icon} size={48} color={Colors.primary} />
+          
+          {/* Gavel Icon */}
+          <View style={styles.iconContainer}>
+            <View style={styles.iconCircle}>
+              <Ionicons 
+                name={
+                  lawItem.category === 'tenant-housing' ? 'home' :
+                  lawItem.category === 'land-property' ? 'business' :
+                  lawItem.category === 'consumer' ? 'shield-checkmark' :
+                  lawItem.category === 'citizen-rights' ? 'person' :
+                  lawItem.category === 'labour' ? 'briefcase' :
+                  lawItem.category === 'farmer' ? 'leaf' :
+                  lawItem.category === 'family' ? 'people' :
+                  'document-text'
+                } 
+                size={48} 
+                color={COLORS.primary} 
+              />
+            </View>
           </View>
-          <Text style={styles.title}>{law.title}</Text>
+          
+          <Text style={styles.headerTitle}>{lawItem.title}</Text>
         </View>
 
-        <ScrollView style={styles.content}>
-          <View style={styles.contentCard}>
-            <Text style={styles.sectionTitle}>Tenant Rights and Responsibilities</Text>
-            <Text style={styles.contentText}>{law.content}</Text>
-            <TouchableOpacity style={styles.linkButton} onPress={handleOpenLink}>
-              <Ionicons name="document-text" size={16} color={Colors.info} />
-              <Text style={styles.linkText}>Learn more: {law.link}</Text>
+        {/* Content Card */}
+        <ScrollView 
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            {/* Overview Section */}
+            <Text style={styles.sectionTitle}>
+              {lawItem.type === 'SCHEME' ? 'Scheme Details' : 'Overview'}
+            </Text>
+            
+            <View style={styles.overviewContent}>
+              {formatOverviewText(lawItem.overviewText)}
+            </View>
+
+            {/* Learn More Link */}
+            <TouchableOpacity 
+              style={styles.learnMoreContainer}
+              onPress={() => handleOpenLink(lawItem.officialLink)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="document-text-outline" size={18} color={COLORS.textMuted} />
+              <View style={styles.learnMoreTextContainer}>
+                <Text style={styles.learnMoreLabel}>Learn more:</Text>
+                <Text style={styles.learnMoreLink}>{lawItem.officialLink}</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
+          {/* Related For You Section */}
           <View style={styles.relatedSection}>
-            {law.related.map((item: any, index: number) => (
-              <TouchableOpacity key={index} style={styles.relatedCard} activeOpacity={0.8}>
-                <View style={styles.relatedIcon}>
-                  <Ionicons name={item.icon} size={32} color={Colors.primary} />
+            <Text style={styles.relatedTitle}>Related for you</Text>
+            
+            {relatedItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.relatedCard}
+                onPress={() => handleRelatedPress(item)}
+                activeOpacity={0.9}
+              >
+                <View style={[styles.relatedIconContainer, { backgroundColor: item.tagColor + '20' }]}>
+                  <Ionicons 
+                    name={
+                      item.category === 'tenant-housing' ? 'home' :
+                      item.category === 'land-property' ? 'business' :
+                      item.category === 'consumer' ? 'shield-checkmark' :
+                      item.category === 'citizen-rights' ? 'person' :
+                      item.category === 'labour' ? 'briefcase' :
+                      item.category === 'farmer' ? 'leaf' :
+                      item.category === 'family' ? 'people' :
+                      'document-text'
+                    } 
+                    size={24} 
+                    color={item.tagColor} 
+                  />
                 </View>
-                <Text style={styles.relatedTitle}>{item.title}</Text>
+                <View style={styles.relatedTextContainer}>
+                  <Text style={styles.relatedCardTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.relatedCardSubtitle} numberOfLines={1}>
+                    {item.tagLabel}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
               </TouchableOpacity>
             ))}
+
+            {/* See More Button */}
+            <TouchableOpacity 
+              style={styles.seeMoreButton}
+              onPress={() => router.push('/(tabs)/laws')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.seeMoreText}>See more in Laws & Schemes</Text>
+              <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 100 }} />
@@ -85,20 +245,191 @@ export default function LawDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#2B2D42' },
-  header: { paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20 },
-  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
-  titleSection: { alignItems: 'center', paddingBottom: 32 },
-  iconCircle: { width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 28, fontWeight: '700', color: '#FFFFFF', textAlign: 'center' },
-  content: { flex: 1, backgroundColor: Colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 24 },
-  contentCard: { marginHorizontal: 20, backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 12 },
-  contentText: { fontSize: 14, color: Colors.text, lineHeight: 22, marginBottom: 16 },
-  linkButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 8 },
-  linkText: { fontSize: 13, color: Colors.info, fontWeight: '600' },
-  relatedSection: { marginHorizontal: 20, gap: 12 },
-  relatedCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  relatedIcon: { width: 56, height: 56, borderRadius: 12, backgroundColor: Colors.surface, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  relatedTitle: { fontSize: 15, fontWeight: '600', color: Colors.text, flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  
+  // Header
+  header: {
+    backgroundColor: COLORS.headerBg,
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    marginBottom: 16,
+  },
+  iconCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.white,
+    textAlign: 'center',
+    paddingHorizontal: 40,
+  },
+
+  // Content
+  content: {
+    flex: 1,
+    marginTop: -1,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 5,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  overviewContent: {
+    marginBottom: 20,
+  },
+  overviewHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  overviewParagraph: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  overviewBullet: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 24,
+    marginBottom: 6,
+    paddingLeft: 4,
+  },
+  
+  // Learn More
+  learnMoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  learnMoreTextContainer: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  learnMoreLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  learnMoreLink: {
+    fontSize: 14,
+    color: COLORS.link,
+    textDecorationLine: 'underline',
+  },
+
+  // Related Section
+  relatedSection: {
+    marginTop: 24,
+  },
+  relatedTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  relatedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  relatedIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  relatedTextContainer: {
+    flex: 1,
+  },
+  relatedCardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
+  },
+  relatedCardSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  
+  // See More
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  seeMoreText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginRight: 6,
+  },
 });
