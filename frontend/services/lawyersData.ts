@@ -86,20 +86,20 @@ const generateTimeSlots = (): { date: string; slots: TimeSlot[] }[] => {
   return result;
 };
 
-// Indian lawyer images from Pexels (free to use)
+// Indian lawyer images - professional headshots
 const INDIAN_LAWYER_IMAGES = {
-  female1: 'https://images.pexels.com/photos/3184405/pexels-photo-3184405.jpeg?auto=compress&cs=tinysrgb&w=400',
-  female2: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
-  female3: 'https://images.pexels.com/photos/4427610/pexels-photo-4427610.jpeg?auto=compress&cs=tinysrgb&w=400',
-  female4: 'https://images.pexels.com/photos/4427430/pexels-photo-4427430.jpeg?auto=compress&cs=tinysrgb&w=400',
-  female5: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=400',
-  female6: 'https://images.pexels.com/photos/3184431/pexels-photo-3184431.jpeg?auto=compress&cs=tinysrgb&w=400',
-  male1: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
-  male2: 'https://images.pexels.com/photos/3184611/pexels-photo-3184611.jpeg?auto=compress&cs=tinysrgb&w=400',
-  male3: 'https://images.pexels.com/photos/3184639/pexels-photo-3184639.jpeg?auto=compress&cs=tinysrgb&w=400',
-  male4: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=400',
-  male5: 'https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg?auto=compress&cs=tinysrgb&w=400',
-  male6: 'https://images.pexels.com/photos/2381069/pexels-photo-2381069.jpeg?auto=compress&cs=tinysrgb&w=400',
+  female1: 'https://randomuser.me/api/portraits/women/79.jpg',
+  female2: 'https://randomuser.me/api/portraits/women/44.jpg',
+  female3: 'https://randomuser.me/api/portraits/women/68.jpg',
+  female4: 'https://randomuser.me/api/portraits/women/65.jpg',
+  female5: 'https://randomuser.me/api/portraits/women/89.jpg',
+  female6: 'https://randomuser.me/api/portraits/women/90.jpg',
+  male1: 'https://randomuser.me/api/portraits/men/32.jpg',
+  male2: 'https://randomuser.me/api/portraits/men/75.jpg',
+  male3: 'https://randomuser.me/api/portraits/men/46.jpg',
+  male4: 'https://randomuser.me/api/portraits/men/64.jpg',
+  male5: 'https://randomuser.me/api/portraits/men/86.jpg',
+  male6: 'https://randomuser.me/api/portraits/men/91.jpg',
 };
 
 export const LAWYERS_DATA: Lawyer[] = [
