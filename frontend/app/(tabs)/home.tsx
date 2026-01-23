@@ -416,6 +416,60 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
 
+        {/* Top / Available Lawyers Section */}
+        <View style={styles.topLawyersHeader}>
+          <Text style={styles.sectionTitle}>Top Lawyers</Text>
+          <TouchableOpacity onPress={() => router.push('/lawyers')}>
+            <Text style={styles.seeAllText}>See all</Text>
+          </TouchableOpacity>
+        </View>
+
+        {topLawyers.map((lawyer) => (
+          <TouchableOpacity 
+            key={lawyer.id} 
+            style={styles.lawyerCard} 
+            onPress={() => router.push({ pathname: '/lawyers', params: { lawyerId: lawyer.id } } as any)} 
+            activeOpacity={0.9}
+          >
+            <Image 
+              source={{ uri: lawyer.image }} 
+              style={styles.lawyerImage} 
+            />
+            <View style={styles.lawyerContent}>
+              <View style={styles.lawyerHeader}>
+                <View style={styles.lawyerInfo}>
+                  <Text style={styles.lawyerName}>{lawyer.name}</Text>
+                  {lawyer.isVerified && (
+                    <Ionicons name="checkmark-circle" size={16} color={COLORS.success} style={{ marginLeft: 4 }} />
+                  )}
+                </View>
+                {lawyer.isAvailable && (
+                  <View style={styles.availableBadge}>
+                    <View style={styles.availableDot} />
+                    <Text style={styles.availableText}>Available</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.lawyerSpecialization}>{lawyer.title}</Text>
+              <View style={styles.lawyerMeta}>
+                <View style={styles.lawyerMetaItem}>
+                  <Ionicons name="star" size={14} color={COLORS.amber} />
+                  <Text style={styles.lawyerMetaText}>{lawyer.rating} ({lawyer.reviewCount})</Text>
+                </View>
+                <View style={styles.lawyerMetaItem}>
+                  <Ionicons name="briefcase" size={14} color={COLORS.textMuted} />
+                  <Text style={styles.lawyerMetaText}>{lawyer.experience} yrs</Text>
+                </View>
+                <View style={styles.lawyerMetaItem}>
+                  <Ionicons name="language" size={14} color={COLORS.textMuted} />
+                  <Text style={styles.lawyerMetaText}>{lawyer.languages.join(', ')}</Text>
+                </View>
+              </View>
+              <Text style={styles.lawyerPrice}>Starting from ₹{lawyer.packages[0].price}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+
         {/* Additional activity cards for demo */}
         <TouchableOpacity style={styles.activityCard} activeOpacity={0.9}>
           <View style={styles.activityImagePlaceholder}>
