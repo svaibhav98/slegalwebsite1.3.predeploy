@@ -229,7 +229,7 @@ export default function HomeScreen() {
                   ? styles.quickAccessIconFeatured 
                   : { backgroundColor: item.bgColor }
               ]}>
-                <MaterialCommunityIcons 
+                <Ionicons 
                   name={item.icon as any} 
                   size={28} 
                   color={item.iconColor} 
