@@ -1,0 +1,13 @@
+diff --git a/frontend/app/(tabs)/documents.tsx b/frontend/app/(tabs)/documents.tsx
+index 8e9ee78..0d54935 100644
+--- a/frontend/app/(tabs)/documents.tsx
++++ b/frontend/app/(tabs)/documents.tsx
+@@ -257,7 +257,7 @@ export default function DocumentsScreen() {
+           </TouchableOpacity>
+         ))}
+       </View>
+-      <View style={{ height: 100 }} />
++      <View style={{ height: 40 }} />
+     </ScrollView>
+   );
+ 
