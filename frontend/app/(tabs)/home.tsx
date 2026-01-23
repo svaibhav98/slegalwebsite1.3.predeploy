@@ -147,7 +147,7 @@ export default function HomeScreen() {
       icon: 'bookmark',
       iconColor: COLORS.amber,
       actionText: 'Contact Us',
-      route: '/(tabs)/laws',
+      route: '/(tabs)/documents?tab=saved' as any,
     },
   ];
 
