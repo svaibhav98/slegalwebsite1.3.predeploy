@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { useAuth } from '../../contexts/AuthContext';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +13,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { setMockUser } = useAuth();
 
   const handleSendOTP = async () => {
     if (phone.length !== 10) {
@@ -46,15 +46,8 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      const mockEmail = `user${phone}@sunolegal.com`;
-      const mockPassword = 'password123';
-      
-      try {
-        await signInWithEmailAndPassword(auth, mockEmail, mockPassword);
-      } catch (signInError: any) {
-        console.log('Mock auth flow');
-      }
-      
+      // Use mock user for demo mode
+      await setMockUser(phone);
       setLoading(false);
       router.replace('/(tabs)/home');
     } catch (err: any) {
