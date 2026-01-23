@@ -143,12 +143,21 @@ const INITIAL_DOCUMENTS: SavedDocument[] = [
 
 export default function DocumentsScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>('create');
+  const params = useLocalSearchParams();
+  const initialTab = (params.tab as Tab) || 'create';
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [currentScreen, setCurrentScreen] = useState<Screen>('list');
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [documents, setDocuments] = useState<SavedDocument[]>(INITIAL_DOCUMENTS);
   const [generatedDocId, setGeneratedDocId] = useState<string | null>(null);
+
+  // Handle tab parameter from navigation
+  useEffect(() => {
+    if (params.tab) {
+      setActiveTab(params.tab as Tab);
+    }
+  }, [params.tab]);
 
   const handleSelectTemplate = (template: DocumentTemplate) => {
     setSelectedTemplate(template);
