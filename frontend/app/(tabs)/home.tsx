@@ -183,8 +183,9 @@ export default function HomeScreen() {
         {/* Hero Banner */}
         <View style={styles.heroBannerContainer}>
           <View style={styles.heroBanner}>
+            <View style={styles.heroBannerBg} />
             <LinearGradient
-              colors={['#1E1F3B', '#4B2B6D', '#8B5A2B', '#E68A00', '#FF9933']}
+              colors={['rgba(30,31,59,0.9)', 'rgba(75,43,109,0.7)', 'rgba(139,90,43,0.5)', 'rgba(230,138,0,0.3)', 'rgba(255,153,51,0.1)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
