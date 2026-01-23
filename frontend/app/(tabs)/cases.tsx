@@ -172,7 +172,15 @@ export default function CasesScreen() {
         
         <Text style={styles.headerTitle}>Cases</Text>
         
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity 
+          style={styles.headerAction} 
+          onPress={() => router.push('/lawyers')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.white} />
+          <Text style={styles.headerActionText}>Consult</Text>
+        </TouchableOpacity>
+      </View>
       </View>
 
       {/* Search Bar */}
