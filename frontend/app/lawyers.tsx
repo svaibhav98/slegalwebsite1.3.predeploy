@@ -192,6 +192,13 @@ export default function LawyersScreen() {
                 onPress={() => handleLawyerPress(lawyer)}
                 activeOpacity={0.9}
               >
+                <View style={styles.cardImageContainer}>
+                  <Image 
+                    source={{ uri: lawyer.image }} 
+                    style={styles.lawyerImage}
+                    defaultSource={{ uri: 'https://via.placeholder.com/55x70/E5E7EB/9CA3AF?text=L' }}
+                  />
+                </View>
                 <View style={styles.cardContent}>
                   <View style={styles.cardHeader}>
                     <Text style={styles.lawyerName} numberOfLines={1}>
@@ -223,11 +230,6 @@ export default function LawyersScreen() {
                     <Text style={styles.experienceValue}>{lawyer.experience} Years</Text>
                   </View>
                 </View>
-                
-                <Image 
-                  source={{ uri: lawyer.image }} 
-                  style={styles.lawyerImage}
-                />
               </TouchableOpacity>
             ))}
           </View>
