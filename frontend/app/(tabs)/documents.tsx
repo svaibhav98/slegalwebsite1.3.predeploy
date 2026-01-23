@@ -461,8 +461,12 @@ export default function DocumentsScreen() {
             <Text style={styles.headerTitle}>Legal Documents</Text>
             <Text style={styles.headerSubtitle}>Generate & manage papers</Text>
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={handleCreateNew}>
-            <Ionicons name="add" size={26} color={COLORS.white} />
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => router.push('/lawyers')}
+          >
+            <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.white} />
+            <Text style={styles.addButtonText}>Find Lawyer</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
