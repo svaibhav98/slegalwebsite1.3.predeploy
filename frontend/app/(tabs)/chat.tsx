@@ -269,6 +269,20 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 1,
   },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
   infoButton: {
     width: 44,
     height: 44,
