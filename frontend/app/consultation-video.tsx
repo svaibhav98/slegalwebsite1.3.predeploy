@@ -8,7 +8,6 @@ import {
   Image,
   Alert,
   SafeAreaView,
-  Pressable,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -99,7 +98,13 @@ export default function ConsultationVideoScreen() {
     Alert.alert('Switch Camera', 'Camera switched successfully!');
   };
 
-  if (!lawyer) return null;
+  if (!lawyer) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -108,24 +113,20 @@ export default function ConsultationVideoScreen() {
       
       <View style={styles.container}>
         {/* Remote Video (Lawyer) - Full screen background */}
-        <View style={styles.remoteVideo}>
-          <Image source={{ uri: lawyer.image }} style={styles.remoteVideoImage} />
-          <View style={styles.remoteOverlay} />
-        </View>
+        <Image source={{ uri: lawyer.image }} style={styles.remoteVideoImage} />
+        <View style={styles.remoteOverlay} />
 
-        {/* Content Layer - above background, contains all interactive elements */}
+        {/* Content Layer */}
         <SafeAreaView style={styles.contentLayer}>
           {/* Top Bar */}
           <View style={styles.topBar}>
-            <Pressable 
-              style={({ pressed }) => [
-                styles.backButton,
-                pressed && styles.buttonPressed
-              ]} 
+            <TouchableOpacity 
+              style={styles.backButton} 
               onPress={handleBack}
+              activeOpacity={0.7}
             >
               <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-            </Pressable>
+            </TouchableOpacity>
             
             <View style={styles.topInfo}>
               <View style={styles.callStatusContainer}>
@@ -155,57 +156,45 @@ export default function ConsultationVideoScreen() {
 
           {/* Bottom Controls */}
           <View style={styles.bottomControls}>
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton, 
-                isMuted && styles.controlButtonActive,
-                pressed && styles.buttonPressed
-              ]} 
+            <TouchableOpacity 
+              style={[styles.controlButton, isMuted && styles.controlButtonActive]} 
               onPress={toggleMute}
+              activeOpacity={0.7}
             >
               <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={24} color={COLORS.white} />
-            </Pressable>
+            </TouchableOpacity>
             
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton, 
-                isVideoOff && styles.controlButtonActive,
-                pressed && styles.buttonPressed
-              ]} 
+            <TouchableOpacity 
+              style={[styles.controlButton, isVideoOff && styles.controlButtonActive]} 
               onPress={toggleVideo}
+              activeOpacity={0.7}
             >
               <Ionicons name={isVideoOff ? 'videocam-off' : 'videocam'} size={24} color={COLORS.white} />
-            </Pressable>
+            </TouchableOpacity>
             
-            <Pressable 
-              style={({ pressed }) => [
-                styles.endCallButton,
-                pressed && styles.endCallButtonPressed
-              ]} 
+            <TouchableOpacity 
+              style={styles.endCallButton} 
               onPress={handleEndCall}
+              activeOpacity={0.8}
             >
               <Ionicons name="call" size={28} color={COLORS.white} style={{ transform: [{ rotate: '135deg' }] }} />
-            </Pressable>
+            </TouchableOpacity>
             
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton,
-                pressed && styles.buttonPressed
-              ]}
+            <TouchableOpacity 
+              style={styles.controlButton}
               onPress={handleChat}
+              activeOpacity={0.7}
             >
               <Ionicons name="chatbubble" size={24} color={COLORS.white} />
-            </Pressable>
+            </TouchableOpacity>
             
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton,
-                pressed && styles.buttonPressed
-              ]}
+            <TouchableOpacity 
+              style={styles.controlButton}
               onPress={handleSwitchCamera}
+              activeOpacity={0.7}
             >
               <Ionicons name="camera-reverse" size={24} color={COLORS.white} />
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </View>
@@ -218,22 +207,37 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: '#000',
   },
-  remoteVideo: { 
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
   remoteVideoImage: { 
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: '100%', 
     height: '100%', 
     resizeMode: 'cover',
   },
   remoteOverlay: { 
-    ...StyleSheet.absoluteFillObject, 
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   contentLayer: {
     flex: 1,
-    zIndex: 10,
+    paddingTop: 50,
   },
   topBar: { 
     flexDirection: 'row',
@@ -288,15 +292,14 @@ const styles = StyleSheet.create({
   },
   localVideo: { 
     position: 'absolute', 
-    top: 120, 
+    top: 140, 
     right: 20, 
-    width: 120, 
-    height: 160, 
+    width: 100, 
+    height: 140, 
     borderRadius: 12, 
     overflow: 'hidden', 
     borderWidth: 2, 
     borderColor: COLORS.white,
-    zIndex: 15,
   },
   localVideoPlaceholder: { 
     flex: 1, 
@@ -317,7 +320,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'center', 
     alignItems: 'center', 
-    gap: 16,
     paddingBottom: 40,
     paddingHorizontal: 20,
   },
@@ -325,16 +327,13 @@ const styles = StyleSheet.create({
     width: 54, 
     height: 54, 
     borderRadius: 27, 
-    backgroundColor: 'rgba(255,255,255,0.2)', 
+    backgroundColor: 'rgba(255,255,255,0.25)', 
     justifyContent: 'center', 
     alignItems: 'center',
+    marginHorizontal: 6,
   },
   controlButtonActive: { 
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
-  buttonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.95 }],
+    backgroundColor: 'rgba(255,255,255,0.45)',
   },
   endCallButton: { 
     width: 64, 
@@ -343,9 +342,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.error, 
     justifyContent: 'center', 
     alignItems: 'center',
-  },
-  endCallButtonPressed: {
-    backgroundColor: '#DC2626',
-    transform: [{ scale: 0.95 }],
+    marginHorizontal: 10,
   },
 });

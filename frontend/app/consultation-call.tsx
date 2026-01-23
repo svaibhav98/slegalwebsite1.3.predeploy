@@ -8,7 +8,6 @@ import {
   Image,
   Alert,
   SafeAreaView,
-  Pressable,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -100,7 +99,13 @@ export default function ConsultationCallScreen() {
     });
   };
 
-  if (!lawyer) return null;
+  if (!lawyer) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -111,13 +116,13 @@ export default function ConsultationCallScreen() {
         <SafeAreaView style={styles.safeArea}>
           {/* Header with back button */}
           <View style={styles.header}>
-            <Pressable 
+            <TouchableOpacity 
               style={styles.backButton} 
               onPress={handleBack}
-              android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+              activeOpacity={0.7}
             >
               <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-            </Pressable>
+            </TouchableOpacity>
           </View>
 
           {/* Call Info */}
@@ -136,69 +141,53 @@ export default function ConsultationCallScreen() {
 
           {/* Controls */}
           <View style={styles.controlsContainer}>
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton, 
-                isMuted && styles.controlButtonActive,
-                pressed && styles.controlButtonPressed
-              ]} 
+            <TouchableOpacity 
+              style={[styles.controlButton, isMuted && styles.controlButtonActive]} 
               onPress={toggleMute}
-              android_ripple={{ color: 'rgba(255,255,255,0.3)' }}
+              activeOpacity={0.7}
             >
               <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={28} color={COLORS.white} />
               <Text style={styles.controlLabel}>{isMuted ? 'Unmute' : 'Mute'}</Text>
-            </Pressable>
+            </TouchableOpacity>
             
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton, 
-                isSpeakerOn && styles.controlButtonActive,
-                pressed && styles.controlButtonPressed
-              ]} 
+            <TouchableOpacity 
+              style={[styles.controlButton, isSpeakerOn && styles.controlButtonActive]} 
               onPress={toggleSpeaker}
-              android_ripple={{ color: 'rgba(255,255,255,0.3)' }}
+              activeOpacity={0.7}
             >
               <Ionicons name={isSpeakerOn ? 'volume-high' : 'volume-medium'} size={28} color={COLORS.white} />
               <Text style={styles.controlLabel}>Speaker</Text>
-            </Pressable>
+            </TouchableOpacity>
             
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton,
-                pressed && styles.controlButtonPressed
-              ]}
+            <TouchableOpacity 
+              style={styles.controlButton}
               onPress={handleKeypad}
-              android_ripple={{ color: 'rgba(255,255,255,0.3)' }}
+              activeOpacity={0.7}
             >
               <Ionicons name="keypad" size={28} color={COLORS.white} />
               <Text style={styles.controlLabel}>Keypad</Text>
-            </Pressable>
+            </TouchableOpacity>
 
-            <Pressable 
-              style={({ pressed }) => [
-                styles.controlButton,
-                pressed && styles.controlButtonPressed
-              ]}
+            <TouchableOpacity 
+              style={styles.controlButton}
               onPress={handleChat}
-              android_ripple={{ color: 'rgba(255,255,255,0.3)' }}
+              activeOpacity={0.7}
             >
               <Ionicons name="chatbubble" size={28} color={COLORS.white} />
               <Text style={styles.controlLabel}>Chat</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
 
           {/* End Call Button */}
           <View style={styles.endCallContainer}>
-            <Pressable 
-              style={({ pressed }) => [
-                styles.endCallButton,
-                pressed && styles.endCallButtonPressed
-              ]} 
+            <TouchableOpacity 
+              style={styles.endCallButton} 
               onPress={handleEndCall}
-              android_ripple={{ color: 'rgba(255,255,255,0.3)' }}
+              activeOpacity={0.8}
             >
               <Ionicons name="call" size={32} color={COLORS.white} style={{ transform: [{ rotate: '135deg' }] }} />
-            </Pressable>
+            </TouchableOpacity>
+            <Text style={styles.endCallLabel}>End Call</Text>
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -210,9 +199,20 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1A1A2E',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
   safeArea: {
     flex: 1,
     justifyContent: 'space-between',
+    paddingTop: 50,
   },
   header: {
     paddingHorizontal: 20,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -239,6 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 70, 
     borderWidth: 4, 
     borderColor: COLORS.success,
+    backgroundColor: '#374151',
   },
   callPulse: { 
     position: 'absolute', 
@@ -288,21 +289,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'center', 
     flexWrap: 'wrap',
-    gap: 20,
     paddingHorizontal: 20,
   },
   controlButton: { 
     alignItems: 'center', 
     padding: 16,
     borderRadius: 16,
+    marginHorizontal: 8,
     minWidth: 70,
   },
   controlButtonActive: { 
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  controlButtonPressed: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    transform: [{ scale: 0.95 }],
+    backgroundColor: 'rgba(255,255,255,0.25)',
   },
   controlLabel: { 
     fontSize: 12, 
@@ -322,8 +319,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center',
   },
-  endCallButtonPressed: {
-    backgroundColor: '#DC2626',
-    transform: [{ scale: 0.95 }],
+  endCallLabel: {
+    fontSize: 12,
+    color: COLORS.white,
+    opacity: 0.8,
+    marginTop: 8,
   },
 });
