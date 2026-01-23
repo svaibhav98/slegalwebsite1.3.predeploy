@@ -206,12 +206,18 @@ export default function NyayAIChatScreen() {
                 {message.role === 'assistant' && (
                   <View style={styles.ctaContainer}>
                     <Text style={styles.ctaLabel}>NyayAI responded</Text>
-                    <TouchableOpacity onPress={handleConnectLawyer} activeOpacity={0.8}>
+                    <TouchableOpacity 
+                      onPress={() => router.push('/lawyers')} 
+                      activeOpacity={0.8}
+                    >
                       <Text style={styles.ctaLink}>Consult a Lawyer</Text>
                     </TouchableOpacity>
                     <Text style={styles.ctaSeparator}> or </Text>
-                    <TouchableOpacity onPress={handleConnectLawyer} activeOpacity={0.8}>
-                      <Text style={styles.ctaLink}>Book a Call</Text>
+                    <TouchableOpacity 
+                      onPress={() => router.push('/(tabs)/documents')} 
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.ctaLink}>Draft a Document</Text>
                     </TouchableOpacity>
                   </View>
                 )}
