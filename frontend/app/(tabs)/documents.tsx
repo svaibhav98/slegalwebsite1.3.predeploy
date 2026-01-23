@@ -354,7 +354,11 @@ export default function DocumentsScreen() {
   // Render Success Screen
   const renderSuccess = () => (
     <View style={styles.successContainer}>
-      <View style={styles.successContent}>
+      <ScrollView 
+        style={styles.successScrollView}
+        contentContainerStyle={styles.successContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.successIconWrapper}>
           <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
         </View>
@@ -388,7 +392,7 @@ export default function DocumentsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Lawyer Review CTA */}
+        {/* Lawyer Review CTA - NOW VISIBLE WITHOUT SCROLLING */}
         <TouchableOpacity 
           style={styles.lawyerReviewCTA}
           onPress={() => router.push('/lawyers')}
@@ -403,18 +407,18 @@ export default function DocumentsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
         </TouchableOpacity>
-      </View>
 
-      {/* Bottom Buttons */}
-      <View style={styles.successBottomActions}>
-        <TouchableOpacity style={styles.viewDocsButton} onPress={handleBackToList} activeOpacity={0.9}>
-          <Text style={styles.viewDocsText}>View My Documents</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.createNewButton} onPress={handleCreateNew} activeOpacity={0.9}>
-          <Ionicons name="add" size={20} color={COLORS.white} />
-          <Text style={styles.createNewText}>Create Another</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Bottom Buttons */}
+        <View style={styles.successBottomActions}>
+          <TouchableOpacity style={styles.viewDocsButton} onPress={handleBackToList} activeOpacity={0.9}>
+            <Text style={styles.viewDocsText}>View My Documents</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.createNewButton} onPress={handleCreateNew} activeOpacity={0.9}>
+            <Ionicons name="add" size={20} color={COLORS.white} />
+            <Text style={styles.createNewText}>Create Another</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 
