@@ -1,633 +1,452 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
-  ScrollView,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  Alert,
   StatusBar,
-  Modal,
+  Image,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { chatAPI } from '../../utils/api';
 
-// Design System Colors
+// Design System Colors matching the Figma design
 const COLORS = {
-  headerStart: '#FF6B35',
-  headerEnd: '#E55A2B',
-  primary: '#FF6B35',
+  gradientStart: '#FFB88C',
+  gradientEnd: '#FFECD2',
+  headerBg: '#2B2D42',
   white: '#FFFFFF',
-  background: '#F5F7FA',
-  surface: '#FFFFFF',
   textPrimary: '#1A1A2E',
   textSecondary: '#6B7280',
   textMuted: '#9CA3AF',
-  border: '#E5E7EB',
-  success: '#10B981',
-  warning: '#F59E0B',
-  warningBg: '#FEF3C7',
-  userBubble: '#FF6B35',
-  aiBubble: '#F3F4F6',
+  inputBg: '#F5F5F5',
+  inputBorder: '#E5E7EB',
   purple: '#7B2CBF',
+  orange: '#FF9933',
+  teal: '#00B8A9',
+  success: '#10B981',
 };
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-  error?: boolean;
-}
-
-export default function ChatScreen() {
+export default function NyayAILandingScreen() {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState('');
-  const [isSaved, setIsSaved] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
 
-  useEffect(() => {
-    const newSessionId = `session_${Date.now()}`;
-    setSessionId(newSessionId);
-    
-    // Welcome message with disclaimer
-    setMessages([{
-      role: 'assistant',
-      content: 'Namaste! 🙏 I am NyayAI, your legal information assistant for India.\n\nI can help you understand:\n• Tenant rights and rent laws\n• Consumer protection\n• RTI applications\n• Government schemes\n• Police procedures\n• And more...\n\n⚠️ **Disclaimer:** I provide general legal information only, NOT personalized legal advice. For specific cases, please consult a qualified lawyer.',
-      timestamp: new Date().toISOString()
-    }]);
-  }, []);
-
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
-
-    const userMessage: Message = {
-      role: 'user',
-      content: inputText,
-      timestamp: new Date().toISOString()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setInputText('');
-    setLoading(true);
-
-    try {
-      const response = await chatAPI.sendMessage(inputText, sessionId);
-      const aiResponse = response.response || response.message || 'I apologize, but I couldn\'t process your query. Please try again.';
-      
-      const aiMessage: Message = {
-        role: 'assistant',
-        content: aiResponse,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error: any) {
-      console.error('Chat error:', error);
-      
-      // Fallback mock response for demo
-      const mockResponse = getMockResponse(inputText);
-      const aiMessage: Message = {
-        role: 'assistant',
-        content: mockResponse,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } finally {
-      setLoading(false);
-      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-    }
-  };
-
-  const getMockResponse = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-    
-    if (lowerQuery.includes('tenant') || lowerQuery.includes('rent')) {
-      return `**Tenant Rights in India:**\n\n1. **Right to Fair Rent:** Landlords cannot charge arbitrary rent. Most states have Rent Control Acts.\n\n2. **Security Deposit:** Maximum 2-3 months rent (varies by state).\n\n3. **Notice Period:** Typically 1-3 months notice required before eviction.\n\n4. **Written Agreement:** Always get a registered rent agreement.\n\n5. **Maintenance:** Landlord responsible for structural repairs.\n\n⚠️ **Disclaimer:** This is general information. For personalized legal advice, please consult a verified lawyer on our platform.`;
-    }
-    
-    if (lowerQuery.includes('rti') || lowerQuery.includes('information')) {
-      return `**How to File RTI Application:**\n\n1. **Who Can File:** Any Indian citizen\n\n2. **Fee:** ₹10 for Central Government (varies for states)\n\n3. **How to Apply:**\n   - Write application to Public Information Officer (PIO)\n   - State clearly what information you need\n   - Pay the application fee\n\n4. **Timeline:** Response within 30 days\n\n5. **Appeals:** First appeal to Appellate Authority, then Information Commission\n\n⚠️ **Disclaimer:** This is general information. For personalized legal advice, please consult a verified lawyer on our platform.`;
-    }
-    
-    if (lowerQuery.includes('consumer') || lowerQuery.includes('complaint')) {
-      return `**Consumer Protection Act, 2019:**\n\n**Your Rights:**\n• Right to safety\n• Right to information\n• Right to choose\n• Right to be heard\n• Right to seek redressal\n\n**How to File Complaint:**\n1. District Forum: Claims up to ₹1 crore\n2. State Commission: ₹1-10 crore\n3. National Commission: Above ₹10 crore\n\n**Required Documents:**\n- Purchase receipt/invoice\n- Written complaint\n- ID proof\n\n⚠️ **Disclaimer:** This is general information. For personalized legal advice, please consult a verified lawyer on our platform.`;
-    }
-    
-    if (lowerQuery.includes('fir') || lowerQuery.includes('police')) {
-      return `**Filing FIR (First Information Report):**\n\n1. **What is FIR?** First written document about a cognizable offense\n\n2. **How to File:**\n   - Visit nearest police station\n   - Give written/oral complaint\n   - Police must register FIR for cognizable offenses\n\n3. **Your Rights:**\n   - Get free copy of FIR\n   - Zero FIR (file anywhere, transferred later)\n   - Online FIR in some states\n\n4. **If Police Refuse:** Complain to SP/DCP or approach Magistrate under CrPC Section 156(3)\n\n⚠️ **Disclaimer:** This is general information. For personalized legal advice, please consult a verified lawyer on our platform.`;
-    }
-    
-    return `Thank you for your question about "${query}".\n\nI'm here to help you understand Indian laws and legal procedures. While I can provide general information, I recommend:\n\n1. **Research:** Look up relevant acts and regulations\n2. **Document:** Keep all relevant paperwork\n3. **Consult:** Speak with a qualified lawyer for specific advice\n\nWould you like me to explain any specific legal topic? I can help with:\n• Property & Tenancy Laws\n• Consumer Rights\n• RTI Applications\n• Family Law basics\n• Government Schemes\n\n⚠️ **Disclaimer:** This is general information. For personalized legal advice, please consult a verified lawyer on our platform.`;
-  };
-
-  const handleSaveChat = () => {
-    if (messages.length <= 1) {
-      Alert.alert('Nothing to Save', 'Start a conversation first before saving.');
-      return;
-    }
-    
-    // In production, this would call the API to save
-    setIsSaved(true);
-    Alert.alert(
-      'Chat Saved! ✓',
-      'This conversation has been saved to your account. You can access it later from "Saved Items".',
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handleConnectToLawyer = () => {
-    router.push('/lawyers');
-  };
-
-  const suggestedQuestions = [
-    { icon: 'home-outline', text: 'What are tenant rights in India?' },
-    { icon: 'document-text-outline', text: 'How to file RTI application?' },
-    { icon: 'cart-outline', text: 'Consumer protection rights?' },
-    { icon: 'shield-checkmark-outline', text: 'How to file FIR?' },
+  const suggestedPrompts = [
+    {
+      id: 'notice',
+      text: 'Need help drafting a notice?',
+      icon: 'document-text',
+      color: COLORS.orange,
+    },
+    {
+      id: 'land',
+      text: 'What should I do in a land dispute?',
+      icon: 'home',
+      color: COLORS.teal,
+    },
+    {
+      id: 'tenant',
+      text: 'What are my tenant rights?',
+      icon: 'key',
+      color: COLORS.purple,
+    },
+    {
+      id: 'rti',
+      text: 'How to file an RTI application?',
+      icon: 'document',
+      color: COLORS.success,
+    },
   ];
 
+  const handlePromptPress = (prompt: typeof suggestedPrompts[0]) => {
+    // Navigate to chat screen with the prompt as first message
+    router.push({
+      pathname: '/nyayai-chat',
+      params: { initialMessage: prompt.text }
+    });
+  };
+
+  const handleSendMessage = () => {
+    if (!inputText.trim()) return;
+    
+    // Navigate to chat screen with the typed message
+    router.push({
+      pathname: '/nyayai-chat',
+      params: { initialMessage: inputText.trim() }
+    });
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-      style={styles.container}
-    >
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.headerStart} />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.gradientStart} />
       
-      {/* Header */}
-      <LinearGradient 
-        colors={[COLORS.headerStart, COLORS.headerEnd]} 
-        style={styles.header}
+      <LinearGradient
+        colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+        style={styles.gradient}
       >
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <View style={styles.aiAvatarHeader}>
-              <Ionicons name="sparkles" size={24} color={COLORS.white} />
-            </View>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>NyayAI</Text>
-              <Text style={styles.headerSubtitle}>Your Legal Assistant</Text>
-            </View>
-          </View>
-          
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={[styles.headerButton, isSaved && styles.headerButtonSaved]} 
-              onPress={handleSaveChat}
-              activeOpacity={0.7}
-            >
-              <Ionicons 
-                name={isSaved ? "bookmark" : "bookmark-outline"} 
-                size={20} 
-                color={COLORS.white} 
-              />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.headerButton} 
-              onPress={() => setShowInfoModal(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="information-circle-outline" size={22} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </LinearGradient>
-
-      {/* Disclaimer Banner */}
-      <View style={styles.disclaimerBanner}>
-        <Ionicons name="alert-circle" size={18} color={COLORS.warning} />
-        <Text style={styles.disclaimerText}>
-          ⚠️ This is <Text style={styles.disclaimerBold}>general legal information</Text>, not personalized advice
-        </Text>
-      </View>
-
-      {/* Messages */}
-      <ScrollView 
-        ref={scrollViewRef} 
-        style={styles.messagesContainer} 
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {messages.map((message, index) => (
-          <View key={index}>
-            <View style={[
-              styles.messageBubble,
-              message.role === 'user' ? styles.userBubble : styles.aiBubble
-            ]}>
-              {message.role === 'assistant' && (
-                <View style={styles.aiAvatarSmall}>
-                  <Ionicons name="sparkles" size={14} color={COLORS.primary} />
-                </View>
-              )}
-              <View style={[
-                styles.messageContent,
-                message.role === 'user' ? styles.userContent : styles.aiContent
-              ]}>
-                <Text style={[
-                  styles.messageText,
-                  message.role === 'user' ? styles.userText : styles.aiText
-                ]}>
-                  {message.content}
-                </Text>
-              </View>
-            </View>
-            
-            {/* Connect to Lawyer CTA - Show after AI responses (except welcome message) */}
-            {message.role === 'assistant' && index > 0 && !message.error && (
-              <TouchableOpacity 
-                style={styles.connectLawyerCTA}
-                onPress={handleConnectToLawyer}
-                activeOpacity={0.8}
-              >
-                <View style={styles.ctaIconContainer}>
-                  <Ionicons name="people" size={18} color={COLORS.purple} />
-                </View>
-                <View style={styles.ctaTextContainer}>
-                  <Text style={styles.ctaTitle}>Need personalized advice?</Text>
-                  <Text style={styles.ctaSubtitle}>Connect to a Lawyer</Text>
-                </View>
-                <Ionicons name="arrow-forward-circle" size={24} color={COLORS.purple} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-
-        {/* Suggested Questions - Show only initially */}
-        {messages.length === 1 && (
-          <View style={styles.suggestedContainer}>
-            <Text style={styles.suggestedTitle}>Try asking:</Text>
-            {suggestedQuestions.map((item, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.suggestedButton}
-                onPress={() => setInputText(item.text)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name={item.icon as any} size={20} color={COLORS.primary} />
-                <Text style={styles.suggestedText}>{item.text}</Text>
-                <Ionicons name="arrow-forward" size={16} color={COLORS.textMuted} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Loading indicator */}
-        {loading && (
-          <View style={[styles.messageBubble, styles.aiBubble]}>
-            <View style={styles.aiAvatarSmall}>
-              <Ionicons name="sparkles" size={14} color={COLORS.primary} />
-            </View>
-            <View style={[styles.messageContent, styles.aiContent, styles.loadingContent]}>
-              <ActivityIndicator size="small" color={COLORS.primary} />
-              <Text style={styles.loadingText}>Thinking...</Text>
-            </View>
-          </View>
-        )}
-
-        <View style={{ height: 120 }} />
-      </ScrollView>
-
-      {/* Input Area */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputDisclaimer}>
-          <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.textSecondary} />
-          <Text style={styles.inputDisclaimerText}>
-            General information only. Consult a qualified lawyer for advice.
-          </Text>
-        </View>
-        
-        <View style={styles.inputWrapper}>
-          <TouchableOpacity style={styles.voiceButton}>
-            <Ionicons name="mic-outline" size={22} color={COLORS.textSecondary} />
-          </TouchableOpacity>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Ask any legal question..."
-            placeholderTextColor={COLORS.textMuted}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={500}
-            editable={!loading}
-          />
-          
-          <TouchableOpacity
-            style={[styles.sendButton, (!inputText.trim() || loading) && styles.sendButtonDisabled]}
-            onPress={handleSend}
-            disabled={!inputText.trim() || loading}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="send" size={18} color={COLORS.white} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Info Modal */}
-      <Modal
-        visible={showInfoModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowInfoModal(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowInfoModal(false)}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          style={styles.keyboardView}
         >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <View style={styles.modalIconContainer}>
-                <Ionicons name="information-circle" size={32} color={COLORS.primary} />
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={handleBack}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="arrow-back" size={22} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            
+            <View style={styles.logoContainer}>
+              <Image 
+                source={require('../../assets/logo.png')} 
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              <View style={styles.logoTextContainer}>
+                <Text style={styles.logoTitle}>Suno Legal</Text>
+                <Text style={styles.logoSubtitle}>Nyay-AI Powered Legal Assistant</Text>
               </View>
-              <Text style={styles.modalTitle}>About NyayAI</Text>
             </View>
             
-            <Text style={styles.modalText}>
-              NyayAI is an AI-powered legal information assistant designed to help Indian citizens understand their legal rights and procedures.
-            </Text>
-            
-            <View style={styles.modalDivider} />
-            
-            <Text style={styles.modalSectionTitle}>⚠️ Important Disclaimer</Text>
-            <Text style={styles.modalText}>
-              NyayAI provides <Text style={styles.modalBold}>general legal information only</Text>. This is NOT legal advice and should not be treated as such.
-            </Text>
-            <Text style={styles.modalText}>
-              For specific legal matters, always consult a qualified and licensed lawyer.
-            </Text>
-            
-            <TouchableOpacity 
-              style={styles.modalButton}
-              onPress={() => setShowInfoModal(false)}
-            >
-              <Text style={styles.modalButtonText}>I Understand</Text>
+            <TouchableOpacity style={styles.infoButton} activeOpacity={0.8}>
+              <Ionicons name="information-circle-outline" size={24} color={COLORS.headerBg} />
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </Modal>
-    </KeyboardAvoidingView>
+
+          <ScrollView 
+            style={styles.content}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Robot Mascot */}
+            <View style={styles.mascotContainer}>
+              <View style={styles.mascotWrapper}>
+                <View style={styles.mascotBody}>
+                  <View style={styles.mascotFace}>
+                    <View style={styles.mascotEye}>
+                      <View style={styles.mascotPupil} />
+                    </View>
+                    <View style={styles.mascotEye}>
+                      <View style={styles.mascotPupil} />
+                    </View>
+                  </View>
+                  <View style={styles.mascotSmile} />
+                </View>
+                <View style={styles.mascotAntenna}>
+                  <View style={styles.antennaBase} />
+                  <View style={styles.antennaBall} />
+                </View>
+              </View>
+            </View>
+
+            {/* Greeting Text */}
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greetingTitle}>Hello, I'm NyayAI</Text>
+              <Text style={styles.greetingSubtitle}>Your Legal Assistant..</Text>
+              <Text style={styles.greetingDescription}>
+                Ask me anything about laws, rights, or government schemes
+              </Text>
+            </View>
+
+            {/* Suggested Prompts */}
+            <View style={styles.promptsContainer}>
+              {suggestedPrompts.map((prompt) => (
+                <TouchableOpacity
+                  key={prompt.id}
+                  style={styles.promptButton}
+                  onPress={() => handlePromptPress(prompt)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.promptDot, { backgroundColor: prompt.color }]} />
+                  <Text style={styles.promptText}>{prompt.text}</Text>
+                  <Ionicons name="arrow-forward" size={18} color={COLORS.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Bottom Section */}
+          <View style={styles.bottomSection}>
+            {/* Disclaimer */}
+            <Text style={styles.disclaimer}>
+              <Text style={styles.disclaimerBold}>Disclaimer:</Text> NyayAI provides general legal information. For specific legal advice, please consult a qualified lawyer.
+            </Text>
+
+            {/* Input Area */}
+            <View style={styles.inputContainer}>
+              <View style={styles.inputIcons}>
+                <TouchableOpacity style={styles.inputIcon}>
+                  <Ionicons name="sparkles" size={20} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.inputIcon}>
+                  <Ionicons name="attach" size={20} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.inputIcon}>
+                  <Ionicons name="mic-outline" size={20} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Ask NyayAI anything..."
+                placeholderTextColor={COLORS.textMuted}
+                value={inputText}
+                onChangeText={setInputText}
+                multiline
+                maxLength={500}
+              />
+              
+              <TouchableOpacity
+                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                onPress={handleSendMessage}
+                disabled={!inputText.trim()}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="send" size={18} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  gradient: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
   },
   
   // Header
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  aiAvatarHeader: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  headerTextContainer: {
+  logoContainer: {
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.white,
-    letterSpacing: -0.3,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 2,
-  },
-  headerActions: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 10,
   },
-  headerButton: {
+  logo: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginRight: 10,
+  },
+  logoTextContainer: {
+    alignItems: 'flex-start',
+  },
+  logoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  logoSubtitle: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  infoButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerButtonSaved: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
+
+  // Content
+  content: {
+    flex: 1,
   },
-  
-  // Disclaimer Banner
-  disclaimerBanner: {
+  scrollContent: {
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+
+  // Mascot
+  mascotContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  mascotWrapper: {
+    alignItems: 'center',
+  },
+  mascotBody: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: '#E6F0FF',
+  },
+  mascotFace: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 10,
+  },
+  mascotEye: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#7B61FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mascotPupil: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4A3AFF',
+  },
+  mascotSmile: {
+    width: 30,
+    height: 12,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    backgroundColor: '#FFB6C1',
+  },
+  mascotAntenna: {
+    position: 'absolute',
+    top: -15,
+    alignItems: 'center',
+  },
+  antennaBase: {
+    width: 3,
+    height: 12,
+    backgroundColor: '#E6F0FF',
+  },
+  antennaBall: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#7B61FF',
+  },
+
+  // Greeting
+  greetingContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  greetingTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  greetingSubtitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    marginBottom: 12,
+  },
+  greetingDescription: {
+    fontSize: 15,
+    color: COLORS.white,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
+
+  // Prompts
+  promptsContainer: {
+    width: '100%',
+    gap: 12,
+    marginBottom: 20,
+  },
+  promptButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.warningBg,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FDE68A',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  disclaimerText: {
+  promptDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 14,
+  },
+  promptText: {
     flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-    marginLeft: 10,
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+
+  // Bottom Section
+  bottomSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  disclaimer: {
+    fontSize: 12,
+    color: COLORS.white,
+    textAlign: 'center',
     lineHeight: 18,
+    marginBottom: 16,
+    opacity: 0.9,
   },
   disclaimerBold: {
     fontWeight: '700',
   },
-  
-  // Messages
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 20,
-  },
-  messageBubble: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    alignItems: 'flex-start',
-  },
-  userBubble: {
-    justifyContent: 'flex-end',
-  },
-  aiBubble: {
-    justifyContent: 'flex-start',
-  },
-  aiAvatarSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  messageContent: {
-    maxWidth: '78%',
-    borderRadius: 18,
-    padding: 14,
-  },
-  userContent: {
-    backgroundColor: COLORS.userBubble,
-    borderBottomRightRadius: 4,
-    marginLeft: 'auto',
-  },
-  aiContent: {
-    backgroundColor: COLORS.surface,
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  userText: {
-    color: COLORS.white,
-  },
-  aiText: {
-    color: COLORS.textPrimary,
-  },
-  loadingContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginLeft: 10,
-    fontStyle: 'italic',
-  },
-  
-  // Connect to Lawyer CTA
-  connectLawyerCTA: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.purple + '10',
-    borderWidth: 1,
-    borderColor: COLORS.purple + '30',
-    borderRadius: 14,
-    padding: 14,
-    marginLeft: 42,
-    marginBottom: 16,
-    marginTop: -4,
-  },
-  ctaIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.purple + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  ctaTextContainer: {
-    flex: 1,
-  },
-  ctaTitle: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginBottom: 2,
-  },
-  ctaSubtitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.purple,
-  },
-  
-  // Suggested Questions
-  suggestedContainer: {
-    marginTop: 16,
-  },
-  suggestedTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 14,
-  },
-  suggestedButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-  },
-  suggestedText: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.textPrimary,
-    marginLeft: 12,
-    fontWeight: '500',
-  },
-  
-  // Input Area
   inputContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
-    backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  inputDisclaimer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 12,
+    backgroundColor: COLORS.inputBg,
+    borderRadius: 28,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
-  inputDisclaimerText: {
-    flex: 1,
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    marginLeft: 8,
-    lineHeight: 16,
-  },
-  inputWrapper: {
+  inputIcons: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: 26,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderWidth: 2,
-    borderColor: COLORS.border,
+    paddingLeft: 8,
   },
-  voiceButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+  inputIcon: {
+    padding: 8,
   },
   input: {
     flex: 1,
@@ -635,84 +454,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     fontSize: 15,
     color: COLORS.textPrimary,
-    maxHeight: 100,
+    maxHeight: 80,
   },
   sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.orange,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonDisabled: {
     opacity: 0.5,
-  },
-  
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 24,
-    padding: 24,
-    width: '100%',
-    maxWidth: 340,
-  },
-  modalHeader: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  modalText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  modalBold: {
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  modalDivider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: 16,
-  },
-  modalSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 10,
-  },
-  modalButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.white,
   },
 });
