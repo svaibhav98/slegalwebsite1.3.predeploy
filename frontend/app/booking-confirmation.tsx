@@ -173,26 +173,209 @@ export default function BookingConfirmationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  successBanner: { alignItems: 'center', paddingTop: 60, paddingBottom: 40, paddingHorizontal: 20 },
-  checkCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  successTitle: { fontSize: 26, fontWeight: '800', color: COLORS.white, marginBottom: 8 },
-  successSubtitle: { fontSize: 15, color: COLORS.white, opacity: 0.9, textAlign: 'center' },
-  content: { flex: 1, padding: 20, marginTop: -20 },
-  lawyerCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  lawyerImage: { width: 56, height: 56, borderRadius: 28, marginRight: 14 },
-  lawyerInfo: { flex: 1 },
-  lawyerName: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
-  lawyerPractice: { fontSize: 13, color: COLORS.success, marginTop: 2 },
-  detailsCard: { backgroundColor: COLORS.white, borderRadius: 16, padding: 20, marginBottom: 16 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  detailLabel: { flex: 1, fontSize: 14, color: COLORS.textSecondary, marginLeft: 12 },
-  detailValue: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary },
-  noteCard: { flexDirection: 'row', backgroundColor: COLORS.primary + '15', borderRadius: 14, padding: 16 },
-  noteText: { flex: 1, fontSize: 13, color: COLORS.primary, marginLeft: 12, lineHeight: 20, fontWeight: '500' },
-  bottomContainer: { padding: 20, backgroundColor: COLORS.white, borderTopWidth: 1, borderTopColor: '#E5E7EB' },
-  startButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.success, borderRadius: 14, paddingVertical: 18, marginBottom: 12 },
-  startButtonText: { fontSize: 16, fontWeight: '700', color: COLORS.white, marginLeft: 8 },
-  homeButton: { alignItems: 'center', paddingVertical: 14 },
-  homeButtonText: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
+  container: { 
+    flex: 1, 
+    backgroundColor: COLORS.background,
+  },
+  
+  // Header
+  headerGradient: {
+    paddingTop: 50,
+    paddingBottom: 60,
+  },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: COLORS.white,
+  },
+  headerSpacer: { width: 44 },
+  curveContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 30,
+    overflow: 'hidden',
+  },
+  curveBackground: {
+    position: 'absolute',
+    bottom: 0,
+    left: -20,
+    right: -20,
+    height: 60,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+  },
+
+  // ScrollContent
+  scrollContent: {
+    flex: 1,
+  },
+
+  // Profile
+  profileContainer: {
+    alignItems: 'center',
+    marginTop: -50,
+    paddingHorizontal: 20,
+  },
+  profileImageWrapper: {
+    position: 'relative',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    borderWidth: 4,
+    borderColor: COLORS.white,
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 2,
+  },
+  lawyerName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginTop: 12,
+  },
+  practiceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  practiceArea: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
+  separator: {
+    marginHorizontal: 8,
+    color: COLORS.textMuted,
+  },
+  availabilityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.success,
+    marginRight: 6,
+  },
+  availabilityText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 12,
+  },
+  statBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  statText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginLeft: 6,
+  },
+
+  // Success Card
+  successCard: {
+    alignItems: 'center',
+    marginTop: 24,
+    paddingHorizontal: 20,
+  },
+  successIconWrapper: {
+    marginBottom: 12,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.success,
+    marginBottom: 8,
+  },
+  successSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+
+  // Details Card
+  detailsCard: { 
+    backgroundColor: COLORS.white, 
+    borderRadius: 16, 
+    padding: 20, 
+    marginHorizontal: 20,
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  detailRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 12, 
+    borderBottomWidth: 1, 
+    borderBottomColor: COLORS.border,
+  },
+  detailLabel: { 
+    flex: 1, 
+    fontSize: 14, 
+    color: COLORS.textSecondary, 
+    marginLeft: 12,
+  },
+  detailValue: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: COLORS.textPrimary,
+  },
+
+  // Bottom
+  bottomContainer: { 
+    padding: 20, 
+    backgroundColor: COLORS.white, 
+    borderTopWidth: 1, 
+    borderTopColor: COLORS.border,
+  },
+  startButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: COLORS.primary, 
+    borderRadius: 30, 
+    paddingVertical: 18, 
+    marginBottom: 12,
+  },
+  startButtonText: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: COLORS.white, 
+    marginLeft: 8,
+  },
+  homeButton: { 
+    alignItems: 'center', 
+    paddingVertical: 14,
+  },
+  homeButtonText: { 
+    fontSize: 15, 
+    fontWeight: '600', 
+    color: COLORS.textSecondary,
+  },
 });
