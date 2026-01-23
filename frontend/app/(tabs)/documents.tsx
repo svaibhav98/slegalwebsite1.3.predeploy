@@ -457,7 +457,6 @@ export default function DocumentsScreen() {
       {/* Header */}
       <LinearGradient colors={['#1A1A2E', '#2B2D42']} style={styles.header}>
         <View style={styles.headerContent}>
-          <Image source={require('../../assets/logo.jpg')} style={styles.logo} resizeMode="contain" />
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>Legal Documents</Text>
             <Text style={styles.headerSubtitle}>Generate & manage papers</Text>
