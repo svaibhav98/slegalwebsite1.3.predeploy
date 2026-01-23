@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, Modal, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
-import { Header, Card, EmptyState } from '../../components/CommonComponents';
 import { caseAPI } from '../../utils/api';
 
 export default function CasesScreen() {
   const router = useRouter();
   const [cases, setCases] = useState<any[]>([]);
+  const [filteredCases, setFilteredCases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('upcoming');
+  const [searchQuery, setSearchQuery] = useState('');
   const [newCase, setNewCase] = useState({ title: '', description: '', court: '', case_number: '', hearing_date: '', status: 'upcoming' });
 
   useEffect(() => {
     loadCases();
   }, []);
+
+  useEffect(() => {
+    filterCases();
+  }, [searchQuery, cases]);
 
   const loadCases = async () => {
     try {
@@ -26,21 +30,36 @@ export default function CasesScreen() {
       
       if (fetchedCases.length === 0) {
         fetchedCases = [
-          { id: '1', title: 'Property Boundary Dispute', description: 'Dispute with neighbor regarding property line demarcation', court: 'District Court, Delhi', case_number: 'DC/2024/001', hearing_date: '2025-02-15', status: 'upcoming', created_at: '2024-12-01', reminder_date: '2025-02-13', notes: [] },
-          { id: '2', title: 'Tenant Eviction Case', description: 'Eviction proceedings for commercial property lease violation', court: 'Civil Court, Mumbai', case_number: 'CC/2024/089', hearing_date: '2025-02-20', status: 'upcoming', created_at: '2024-11-15', reminder_date: '2025-02-18', notes: [] },
-          { id: '3', title: 'Consumer Complaint - Electronics', description: 'Complaint against manufacturer for defective product and refund', court: 'Consumer Forum, Bangalore', case_number: 'CF/2024/234', hearing_date: '2025-02-10', status: 'ongoing', created_at: '2024-10-20', last_hearing: '2025-01-15', notes: [] },
-          { id: '4', title: 'Employment Wrongful Termination', description: 'Wrongful termination claim with compensation demand', court: 'Labour Court, Pune', case_number: 'LC/2023/456', hearing_date: '', status: 'closed', created_at: '2023-08-10', closed_date: '2024-12-01', notes: [] },
-          { id: '5', title: 'Family Property Division', description: 'Property inheritance dispute among family members', court: 'Family Court, Chennai', case_number: 'FC/2024/112', hearing_date: '2025-03-05', status: 'ongoing', created_at: '2024-09-01', last_hearing: '2025-01-20', notes: [] },
+          { id: '1', title: 'Tenancy Laws Violation', description: 'Dispute with landlord regarding illegal eviction', court: 'Civil Court, Delhi', case_number: 'CC/DL/2024/001', hearing_date: '2025-02-15', status: 'ongoing', icon_color: '#8B5CF6', created_at: '2024-12-01' },
+          { id: '2', title: 'Consumer Rights Case', description: 'Product defect complaint against manufacturer', court: 'Consumer Forum, Mumbai', case_number: 'CF/MH/2024/089', hearing_date: '2025-02-20', status: 'upcoming', icon_color: '#3B82F6', created_at: '2024-11-15' },
+          { id: '3', title: 'Property Dispute', description: 'Boundary dispute with neighbor', court: 'District Court, Bangalore', case_number: 'DC/KA/2024/234', hearing_date: '2025-02-10', status: 'ongoing', icon_color: '#F59E0B', created_at: '2024-10-20' },
+          { id: '4', title: 'Employment Termination', description: 'Wrongful termination compensation claim', court: 'Labour Court, Pune', case_number: 'LC/MH/2023/456', status: 'closed', icon_color: '#10B981', closed_date: '2024-12-01', created_at: '2023-08-10' },
         ];
       }
       setCases(fetchedCases);
+      setFilteredCases(fetchedCases);
     } catch (error) {
       console.error('Error loading cases:', error);
       setCases([]);
+      setFilteredCases([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const filterCases = () => {
+    if (!searchQuery.trim()) {
+      setFilteredCases(cases);
+      return;
+    }
+    
+    const filtered = cases.filter(c => 
+      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.case_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.court.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredCases(filtered);
   };
 
   const handleAddCase = async () => {
@@ -49,16 +68,16 @@ export default function CasesScreen() {
       return;
     }
 
-    try {
-      const caseWithId = { ...newCase, id: Date.now().toString(), created_at: new Date().toISOString(), notes: [] };
-      setCases([...cases, caseWithId]);
-      setShowAddModal(false);
-      setNewCase({ title: '', description: '', court: '', case_number: '', hearing_date: '', status: 'upcoming' });
-      Alert.alert('Success', 'Case added successfully');
-    } catch (error) {
-      console.error('Error creating case:', error);
-      Alert.alert('Error', 'Failed to add case');
-    }
+    const caseWithId = { 
+      ...newCase, 
+      id: Date.now().toString(), 
+      created_at: new Date().toISOString(), 
+      icon_color: '#8B5CF6' 
+    };
+    setCases([...cases, caseWithId]);
+    setShowAddModal(false);
+    setNewCase({ title: '', description: '', court: '', case_number: '', hearing_date: '', status: 'upcoming' });
+    Alert.alert('Success', 'Case added successfully');
   };
 
   const onRefresh = () => {
@@ -67,105 +86,122 @@ export default function CasesScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    const colors: any = { upcoming: Colors.warning, ongoing: Colors.info, closed: Colors.textSecondary };
-    return colors[status] || Colors.gray400;
+    if (status === 'ongoing') return '#10B981';
+    if (status === 'upcoming') return '#F59E0B';
+    if (status === 'closed') return '#EF4444';
+    return '#9CA3AF';
   };
 
-  const getFilteredCases = () => {
-    if (selectedTab === 'upcoming') return cases.filter(c => c.status === 'upcoming');
-    if (selectedTab === 'ongoing') return cases.filter(c => c.status === 'ongoing');
-    if (selectedTab === 'closed') return cases.filter(c => c.status === 'closed');
-    return cases;
+  const getStatusLabel = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const filteredCases = getFilteredCases();
-
-  const getUpcomingCount = () => cases.filter(c => c.status === 'upcoming').length;
   const getOngoingCount = () => cases.filter(c => c.status === 'ongoing').length;
   const getClosedCount = () => cases.filter(c => c.status === 'closed').length;
+  const getUpcomingCount = () => cases.filter(c => c.status === 'upcoming').length;
 
   return (
     <View style={styles.container}>
-      <Header title="My Cases" subtitle="Track and manage your legal cases" rightAction={
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)} activeOpacity={0.8}>
-          <Ionicons name="add-circle" size={28} color={Colors.primary} />
-        </TouchableOpacity>
-      } />
-
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity style={[styles.tab, selectedTab === 'upcoming' && styles.tabActive]} onPress={() => setSelectedTab('upcoming')} activeOpacity={0.8}>
-          <Text style={[styles.tabText, selectedTab === 'upcoming' && styles.tabTextActive]}>Upcoming</Text>
-          <View style={[styles.tabBadge, selectedTab === 'upcoming' && styles.tabBadgeActive]}>
-            <Text style={[styles.tabBadgeText, selectedTab === 'upcoming' && styles.tabBadgeTextActive]}>{getUpcomingCount()}</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, selectedTab === 'ongoing' && styles.tabActive]} onPress={() => setSelectedTab('ongoing')} activeOpacity={0.8}>
-          <Text style={[styles.tabText, selectedTab === 'ongoing' && styles.tabTextActive]}>Ongoing</Text>
-          <View style={[styles.tabBadge, selectedTab === 'ongoing' && styles.tabBadgeActive]}>
-            <Text style={[styles.tabBadgeText, selectedTab === 'ongoing' && styles.tabBadgeTextActive]}>{getOngoingCount()}</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, selectedTab === 'closed' && styles.tabActive]} onPress={() => setSelectedTab('closed')} activeOpacity={0.8}>
-          <Text style={[styles.tabText, selectedTab === 'closed' && styles.tabTextActive]}>Closed</Text>
-          <View style={[styles.tabBadge, selectedTab === 'closed' && styles.tabBadgeActive]}>
-            <Text style={[styles.tabBadgeText, selectedTab === 'closed' && styles.tabBadgeTextActive]}>{getClosedCount()}</Text>
-          </View>
-        </TouchableOpacity>
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <Text style={styles.headerTitle}>Cases</Text>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)} activeOpacity={0.8}>
+            <Ionicons name="add" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+          <TextInput 
+            style={styles.searchInput}
+            placeholder="Search by Case Number or Party Name..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading cases...</Text>
         </View>
-      ) : filteredCases.length === 0 ? (
-        <EmptyState icon="folder-open-outline" title={`No ${selectedTab} cases`} subtitle={selectedTab === 'upcoming' ? 'Add your first case to start tracking' : `You don't have any ${selectedTab} cases yet`} action={selectedTab === 'upcoming' ? { label: 'Add Case', onPress: () => setShowAddModal(true) } : undefined} />
       ) : (
         <ScrollView style={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />}>
-          {filteredCases.map((caseItem, index) => (
-            <TouchableOpacity key={index} activeOpacity={0.9} onPress={() => router.push(`/case-detail/${caseItem.id}` as any)}>
-              <Card style={styles.caseCard}>
-                <View style={styles.caseHeader}>
-                  <View style={styles.caseIcon}>
-                    <Ionicons name="document-text" size={24} color={Colors.primary} />
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryHeader}>
+              <Ionicons name="stats-chart" size={24} color={Colors.text} />
+              <Text style={styles.summaryTitle}>My Cases</Text>
+            </View>
+            <View style={styles.summaryStats}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{getOngoingCount()}</Text>
+                <Text style={styles.statLabel}>Ongoing</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{getClosedCount()}</Text>
+                <Text style={styles.statLabel}>Closed</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{getUpcomingCount()}</Text>
+                <Text style={styles.statLabel}>Upcoming</Text>
+              </View>
+            </View>
+          </View>
+
+          {filteredCases.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="folder-open-outline" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyTitle}>No cases found</Text>
+              <Text style={styles.emptySubtitle}>Try adjusting your search or add a new case</Text>
+            </View>
+          ) : (
+            filteredCases.map((caseItem, index) => (
+              <TouchableOpacity key={index} style={styles.caseCard} onPress={() => router.push(`/case-detail/${caseItem.id}` as any)} activeOpacity={0.7}>
+                <View style={styles.caseContent}>
+                  <View style={[styles.caseIconCircle, { backgroundColor: caseItem.icon_color }]}>
+                    <Ionicons name="document-text" size={24} color="#FFFFFF" />
                   </View>
+                  
                   <View style={styles.caseInfo}>
-                    <Text style={styles.caseTitle}>{caseItem.title}</Text>
-                    <View style={styles.caseMeta}>
-                      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(caseItem.status) + '20' }]}>
-                        <Text style={[styles.statusText, { color: getStatusColor(caseItem.status) }]}>{caseItem.status}</Text>
+                    <View style={styles.caseTitleRow}>
+                      <Text style={styles.caseTitle} numberOfLines={1}>{caseItem.title}</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(caseItem.status) }]}>
+                        <Text style={styles.statusText}>{getStatusLabel(caseItem.status)}</Text>
                       </View>
-                      {caseItem.case_number && <Text style={styles.caseNumber}> • {caseItem.case_number}</Text>}
                     </View>
+                    
+                    <View style={styles.caseDetail}>
+                      <Ionicons name="document-outline" size={14} color="#6B7280" />
+                      <Text style={styles.caseDetailText}>{caseItem.case_number}</Text>
+                    </View>
+                    
+                    <View style={styles.caseDetail}>
+                      <Ionicons name="location-outline" size={14} color="#6B7280" />
+                      <Text style={styles.caseDetailText}>{caseItem.court}</Text>
+                    </View>
+                    
+                    {caseItem.hearing_date && (
+                      <View style={styles.caseDetail}>
+                        <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+                        <Text style={styles.caseDetailText}>Next Hearing: {caseItem.hearing_date}</Text>
+                      </View>
+                    )}
+                    
+                    {caseItem.status === 'closed' && caseItem.closed_date && (
+                      <View style={styles.caseDetail}>
+                        <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                        <Text style={[styles.caseDetailText, { color: '#10B981' }]}>Resolved: {caseItem.closed_date}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
-                <Text style={styles.caseDescription} numberOfLines={2}>{caseItem.description}</Text>
-                {caseItem.court && <Text style={styles.courtText}><Ionicons name="business" size={14} color={Colors.textSecondary} /> {caseItem.court}</Text>}
-                {caseItem.hearing_date && caseItem.status !== 'closed' && (
-                  <View style={styles.hearingDate}>
-                    <Ionicons name="calendar" size={16} color={Colors.info} />
-                    <Text style={styles.hearingText}>Next hearing: {caseItem.hearing_date}</Text>
-                  </View>
-                )}
-                {caseItem.status === 'closed' && caseItem.closed_date && (
-                  <View style={styles.closedBanner}>
-                    <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                    <Text style={styles.closedText}>Closed on {caseItem.closed_date}</Text>
-                  </View>
-                )}
-                <View style={styles.caseFooter}>
-                  <TouchableOpacity style={styles.actionChip}>
-                    <Ionicons name="notifications-outline" size={16} color={Colors.text} />
-                    <Text style={styles.actionChipText}>Reminders</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewDetailsButton}>
-                    <Text style={styles.viewDetailsText}>View Details</Text>
-                    <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
-                  </TouchableOpacity>
-                </View>
-              </Card>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
+          
           <View style={{ height: 100 }} />
         </ScrollView>
       )}
@@ -179,18 +215,23 @@ export default function CasesScreen() {
                 <Ionicons name="close" size={24} color={Colors.text} />
               </TouchableOpacity>
             </View>
-            <ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.inputLabel}>Case Title *</Text>
-              <TextInput style={styles.input} placeholder="e.g., Property Dispute" placeholderTextColor={Colors.gray400} value={newCase.title} onChangeText={(text) => setNewCase({ ...newCase, title: text })} />
+              <TextInput style={styles.input} placeholder="e.g., Property Dispute" placeholderTextColor="#9CA3AF" value={newCase.title} onChangeText={(text) => setNewCase({ ...newCase, title: text })} />
+              
               <Text style={styles.inputLabel}>Description *</Text>
-              <TextInput style={[styles.input, styles.textArea]} placeholder="Brief description of the case" placeholderTextColor={Colors.gray400} value={newCase.description} onChangeText={(text) => setNewCase({ ...newCase, description: text })} multiline numberOfLines={4} />
+              <TextInput style={[styles.input, styles.textArea]} placeholder="Brief description" placeholderTextColor="#9CA3AF" value={newCase.description} onChangeText={(text) => setNewCase({ ...newCase, description: text })} multiline numberOfLines={4} />
+              
               <Text style={styles.inputLabel}>Court</Text>
-              <TextInput style={styles.input} placeholder="e.g., District Court" placeholderTextColor={Colors.gray400} value={newCase.court} onChangeText={(text) => setNewCase({ ...newCase, court: text })} />
+              <TextInput style={styles.input} placeholder="e.g., District Court" placeholderTextColor="#9CA3AF" value={newCase.court} onChangeText={(text) => setNewCase({ ...newCase, court: text })} />
+              
               <Text style={styles.inputLabel}>Case Number</Text>
-              <TextInput style={styles.input} placeholder="e.g., 123/2025" placeholderTextColor={Colors.gray400} value={newCase.case_number} onChangeText={(text) => setNewCase({ ...newCase, case_number: text })} />
+              <TextInput style={styles.input} placeholder="e.g., DC/2024/001" placeholderTextColor="#9CA3AF" value={newCase.case_number} onChangeText={(text) => setNewCase({ ...newCase, case_number: text })} />
+              
               <Text style={styles.inputLabel}>Next Hearing Date</Text>
-              <TextInput style={styles.input} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.gray400} value={newCase.hearing_date} onChangeText={(text) => setNewCase({ ...newCase, hearing_date: text })} />
-              <TouchableOpacity style={[styles.submitButton, (!newCase.title || !newCase.description) && styles.submitButtonDisabled]} onPress={handleAddCase} disabled={!newCase.title || !newCase.description} activeOpacity={0.9}>
+              <TextInput style={styles.input} placeholder="YYYY-MM-DD" placeholderTextColor="#9CA3AF" value={newCase.hearing_date} onChangeText={(text) => setNewCase({ ...newCase, hearing_date: text })} />
+              
+              <TouchableOpacity style={[styles.submitButton, (!newCase.title || !newCase.description) && styles.submitButtonDisabled]} onPress={handleAddCase} disabled={!newCase.title || !newCase.description} activeOpacity={0.8}>
                 <Text style={styles.submitButtonText}>Add Case</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -202,48 +243,45 @@ export default function CasesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  addButton: { padding: 4 },
-  tabsContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10, marginHorizontal: 4 },
-  tabActive: { backgroundColor: Colors.primary, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
-  tabText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary, marginRight: 6 },
-  tabTextActive: { color: '#FFFFFF' },
-  tabBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: Colors.gray200 },
-  tabBadgeActive: { backgroundColor: '#FFFFFF30' },
-  tabBadgeText: { fontSize: 12, fontWeight: '700', color: Colors.text },
-  tabBadgeTextActive: { color: '#FFFFFF' },
-  content: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  header: { backgroundColor: '#242B4E', paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: '#FFFFFF', letterSpacing: -0.5 },
+  addButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#353D5E', borderRadius: 12, paddingHorizontal: 16, height: 48 },
+  searchIcon: { marginRight: 12 },
+  searchInput: { flex: 1, fontSize: 15, color: '#FFFFFF', fontWeight: '400' },
+  content: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 12, fontSize: 14, color: Colors.textSecondary },
-  caseCard: { marginBottom: 16, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 4 },
-  caseHeader: { flexDirection: 'row', marginBottom: 12 },
-  caseIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.primaryLight + '30', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  summaryCard: { backgroundColor: '#FFFFFF', marginHorizontal: 20, marginTop: 20, borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  summaryTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937', marginLeft: 12, letterSpacing: -0.3 },
+  summaryStats: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  statItem: { alignItems: 'center' },
+  statNumber: { fontSize: 32, fontWeight: '700', color: '#1F2937', marginBottom: 4 },
+  statLabel: { fontSize: 14, fontWeight: '500', color: '#6B7280' },
+  statDivider: { width: 1, height: 40, backgroundColor: '#E5E7EB' },
+  caseCard: { backgroundColor: '#FFFFFF', marginHorizontal: 20, marginTop: 16, borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  caseContent: { flexDirection: 'row' },
+  caseIconCircle: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   caseInfo: { flex: 1 },
-  caseTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 6, letterSpacing: -0.3 },
-  caseMeta: { flexDirection: 'row', alignItems: 'center' },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  statusText: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
-  caseNumber: { fontSize: 12, color: Colors.textSecondary, marginLeft: 4, fontWeight: '500' },
-  caseDescription: { fontSize: 14, color: Colors.text, lineHeight: 20, marginBottom: 10, opacity: 0.8 },
-  courtText: { fontSize: 13, color: Colors.textSecondary, marginBottom: 10 },
-  hearingDate: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.info + '15', padding: 10, borderRadius: 10, marginBottom: 12 },
-  hearingText: { fontSize: 13, color: Colors.info, marginLeft: 8, fontWeight: '600' },
-  closedBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.success + '15', padding: 10, borderRadius: 10, marginBottom: 12 },
-  closedText: { fontSize: 13, color: Colors.success, marginLeft: 8, fontWeight: '600' },
-  caseFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 12 },
-  actionChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, gap: 4 },
-  actionChipText: { fontSize: 12, fontWeight: '600', color: Colors.text },
-  viewDetailsButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  viewDetailsText: { fontSize: 14, fontWeight: '700', color: Colors.primary, letterSpacing: -0.2 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: Colors.background, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '90%', padding: 24 },
+  caseTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+  caseTitle: { fontSize: 16, fontWeight: '700', color: '#1F2937', flex: 1, marginRight: 8, letterSpacing: -0.3 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusText: { fontSize: 11, fontWeight: '700', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 0.5 },
+  caseDetail: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, gap: 6 },
+  caseDetailText: { fontSize: 13, color: '#6B7280', fontWeight: '400' },
+  emptyState: { alignItems: 'center', paddingVertical: 60 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#4B5563', marginTop: 16 },
+  emptySubtitle: { fontSize: 14, color: '#9CA3AF', marginTop: 8, textAlign: 'center', paddingHorizontal: 40 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%', padding: 24 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, letterSpacing: -0.5 },
-  inputLabel: { fontSize: 15, fontWeight: '600', color: Colors.text, marginBottom: 10, marginTop: 16, letterSpacing: -0.3 },
-  input: { borderWidth: 2, borderColor: Colors.border, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 14, fontSize: 15, color: Colors.text, backgroundColor: Colors.surface, fontWeight: '500' },
+  modalTitle: { fontSize: 22, fontWeight: '700', color: '#1F2937', letterSpacing: -0.5 },
+  inputLabel: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 8, marginTop: 16 },
+  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: '#1F2937', fontWeight: '400' },
   textArea: { height: 100, textAlignVertical: 'top' },
-  submitButton: { marginTop: 28, backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16, alignItems: 'center', shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  submitButton: { marginTop: 24, backgroundColor: '#FF6B35', borderRadius: 12, paddingVertical: 16, alignItems: 'center', shadowColor: '#FF6B35', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   submitButtonDisabled: { opacity: 0.5 },
-  submitButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.5 },
+  submitButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.3 },
 });
