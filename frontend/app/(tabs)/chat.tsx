@@ -281,6 +281,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerLogoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  headerLogo: {
+    width: 24,
+    height: 24,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
