@@ -295,6 +295,29 @@ export default function CasesScreen() {
               onPress={() => handleCasePress(caseItem)}
               activeOpacity={0.9}
             >
+              {/* Reminder Bell Icon - Top Right */}
+              <TouchableOpacity 
+                style={styles.reminderIcon}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  router.push({
+                    pathname: '/create-reminder',
+                    params: {
+                      caseId: caseItem.id,
+                      caseTitle: caseItem.title,
+                      caseStatus: caseItem.status,
+                    },
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name={caseItem.reminders.length > 0 ? "notifications" : "notifications-outline"} 
+                  size={22} 
+                  color={caseItem.reminders.length > 0 ? COLORS.primary : COLORS.textMuted} 
+                />
+              </TouchableOpacity>
+
               {/* Case Icon */}
               <View style={styles.caseIconContainer}>
                 <View style={[styles.caseIcon, { backgroundColor: getStatusColor(caseItem.status) + '20' }]}>
