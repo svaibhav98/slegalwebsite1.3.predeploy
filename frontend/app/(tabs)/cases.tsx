@@ -537,9 +537,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
+    paddingTop: 40,
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 14,
     backgroundColor: COLORS.headerBg,
   },
   backButton: {
@@ -558,6 +558,22 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 44,
+  },
+  headerAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  headerActionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.white,
   },
 
   // Search
