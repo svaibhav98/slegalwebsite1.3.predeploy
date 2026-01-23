@@ -68,6 +68,10 @@ app.add_middleware(
 
 async def verify_firebase_token(authorization: str = Header(None)):
     """Verify Firebase ID token from Authorization header"""
+    if not FIREBASE_ENABLED:
+        # Mock authentication for development
+        return {"uid": "mock_user_123", "email": "test@example.com"}
+    
     if not authorization:
         raise HTTPException(status_code=401, detail="No authorization token provided")
     
