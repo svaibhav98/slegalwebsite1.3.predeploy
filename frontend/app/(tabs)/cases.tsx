@@ -181,7 +181,6 @@ export default function CasesScreen() {
           <Text style={styles.headerActionText}>Consult</Text>
         </TouchableOpacity>
       </View>
-      </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
