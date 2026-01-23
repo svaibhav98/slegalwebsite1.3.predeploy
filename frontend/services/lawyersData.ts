@@ -86,20 +86,20 @@ const generateTimeSlots = (): { date: string; slots: TimeSlot[] }[] => {
   return result;
 };
 
-// Indian lawyer images - professional headshots
+// Indian lawyer images - professional headshots using UI Faces
 const INDIAN_LAWYER_IMAGES = {
-  female1: 'https://randomuser.me/api/portraits/women/79.jpg',
-  female2: 'https://randomuser.me/api/portraits/women/44.jpg',
-  female3: 'https://randomuser.me/api/portraits/women/68.jpg',
-  female4: 'https://randomuser.me/api/portraits/women/65.jpg',
-  female5: 'https://randomuser.me/api/portraits/women/89.jpg',
-  female6: 'https://randomuser.me/api/portraits/women/90.jpg',
-  male1: 'https://randomuser.me/api/portraits/men/32.jpg',
-  male2: 'https://randomuser.me/api/portraits/men/75.jpg',
-  male3: 'https://randomuser.me/api/portraits/men/46.jpg',
-  male4: 'https://randomuser.me/api/portraits/men/64.jpg',
-  male5: 'https://randomuser.me/api/portraits/men/86.jpg',
-  male6: 'https://randomuser.me/api/portraits/men/91.jpg',
+  female1: 'https://i.pravatar.cc/300?img=47',
+  female2: 'https://i.pravatar.cc/300?img=45',
+  female3: 'https://i.pravatar.cc/300?img=48',
+  female4: 'https://i.pravatar.cc/300?img=49',
+  female5: 'https://i.pravatar.cc/300?img=44',
+  female6: 'https://i.pravatar.cc/300?img=43',
+  male1: 'https://i.pravatar.cc/300?img=60',
+  male2: 'https://i.pravatar.cc/300?img=61',
+  male3: 'https://i.pravatar.cc/300?img=57',
+  male4: 'https://i.pravatar.cc/300?img=59',
+  male5: 'https://i.pravatar.cc/300?img=52',
+  male6: 'https://i.pravatar.cc/300?img=53',
 };
 
 export const LAWYERS_DATA: Lawyer[] = [
