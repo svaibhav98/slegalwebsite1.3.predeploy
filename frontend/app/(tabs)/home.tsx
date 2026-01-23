@@ -620,10 +620,19 @@ const styles = StyleSheet.create({
     flex: 1, 
     marginLeft: 16,
   },
+  headerLogoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  headerLogo: {
+    width: 24,
+    height: 24,
+  },
   greetingText: { 
     fontSize: 14, 
-    color: 'rgba(255,255,255,0.7)', 
-    marginBottom: 2,
+    color: 'rgba(255,255,255,0.7)',
   },
   welcomeText: { 
     fontSize: 18, 
