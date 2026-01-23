@@ -602,16 +602,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  lawyerImage: {
-    position: 'absolute',
-    right: 8,
-    top: 14,
-    width: 55,
-    height: 70,
-    borderRadius: 10,
-    backgroundColor: '#E5E7EB',
-    zIndex: 1,
-  },
 
   // Modal
   modalOverlay: {
