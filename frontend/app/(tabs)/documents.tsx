@@ -527,8 +527,8 @@ const styles = StyleSheet.create({
   
   // Header
   header: { paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20 },
-  headerContent: { flexDirection: 'row', alignItems: 'center' },
-  logo: { width: 48, height: 48, marginRight: 12, borderRadius: 24, backgroundColor: COLORS.white },
+  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerLogo: { width: 32, height: 32 },
   headerText: { flex: 1 },
   headerTitle: { fontSize: 22, fontWeight: '700', color: COLORS.white },
   headerSubtitle: { fontSize: 14, color: COLORS.white, opacity: 0.9, marginTop: 2 },
