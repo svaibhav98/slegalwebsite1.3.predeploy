@@ -537,11 +537,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
-    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  cardImageContainer: {
+    marginRight: 10,
+  },
+  lawyerImage: {
+    width: 50,
+    height: 65,
+    borderRadius: 10,
+    backgroundColor: '#E5E7EB',
   },
   cardContent: {
     flex: 1,
-    paddingRight: 50,
   },
   cardHeader: {
     flexDirection: 'row',
