@@ -107,16 +107,9 @@ export default function NyayAILandingScreen() {
               <Ionicons name="arrow-back" size={22} color={COLORS.textPrimary} />
             </TouchableOpacity>
             
-            <View style={styles.logoContainer}>
-              <Image 
-                source={require('../../assets/logo.jpg')} 
-                style={styles.logo}
-                resizeMode="contain"
-              />
-              <View style={styles.logoTextContainer}>
-                <Text style={styles.logoTitle}>Suno Legal</Text>
-                <Text style={styles.logoSubtitle}>Nyay-AI Powered Legal Assistant</Text>
-              </View>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Nyay-AI</Text>
+              <Text style={styles.headerSubtitle}>Legal Assistant</Text>
             </View>
             
             <TouchableOpacity style={styles.infoButton} activeOpacity={0.8}>
