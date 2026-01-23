@@ -6,15 +6,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isGuest: boolean;
   signOut: () => Promise<void>;
   setMockUser: (phone: string) => Promise<void>;
+  setGuestMode: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isGuest: false,
   signOut: async () => {},
   setMockUser: async () => {},
+  setGuestMode: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
