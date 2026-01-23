@@ -202,53 +202,61 @@ export default function CasesScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* My Cases Summary Card */}
+        {/* My Cases Summary Card - Now Interactive */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <Ionicons name="ribbon" size={20} color="#60A5FA" />
             <Text style={styles.summaryTitle}>My Cases</Text>
           </View>
           <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryCount}>{counts.ongoing}</Text>
-              <Text style={styles.summaryLabel}>Ongoing</Text>
-            </View>
-            <View style={styles.summaryDivider} />
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryCount}>{counts.closed}</Text>
-              <Text style={styles.summaryLabel}>Closed</Text>
-            </View>
-            <View style={styles.summaryDivider} />
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryCount}>{counts.upcoming}</Text>
-              <Text style={styles.summaryLabel}>Upcoming</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Filter Tabs */}
-        <View style={styles.tabsContainer}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.id}
-              style={[
-                styles.tab,
-                activeTab === tab.id && styles.tabActive
-              ]}
+            <TouchableOpacity 
+              style={[styles.summaryItem, activeTab === 'all' && styles.summaryItemActive]}
               onPress={() => {
-                setActiveTab(tab.id);
+                setActiveTab('all');
                 refreshData();
               }}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
             >
-              <Text style={[
-                styles.tabText,
-                activeTab === tab.id && styles.tabTextActive
-              ]}>
-                {tab.label}
-              </Text>
+              <Text style={[styles.summaryCount, activeTab === 'all' && styles.summaryCountActive]}>{counts.all}</Text>
+              <Text style={[styles.summaryLabel, activeTab === 'all' && styles.summaryLabelActive]}>All</Text>
             </TouchableOpacity>
-          ))}
+            <View style={styles.summaryDivider} />
+            <TouchableOpacity 
+              style={[styles.summaryItem, activeTab === 'ongoing' && styles.summaryItemActive]}
+              onPress={() => {
+                setActiveTab('ongoing');
+                refreshData();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.summaryCount, activeTab === 'ongoing' && styles.summaryCountActive]}>{counts.ongoing}</Text>
+              <Text style={[styles.summaryLabel, activeTab === 'ongoing' && styles.summaryLabelActive]}>Ongoing</Text>
+            </TouchableOpacity>
+            <View style={styles.summaryDivider} />
+            <TouchableOpacity 
+              style={[styles.summaryItem, activeTab === 'closed' && styles.summaryItemActive]}
+              onPress={() => {
+                setActiveTab('closed');
+                refreshData();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.summaryCount, activeTab === 'closed' && styles.summaryCountActive]}>{counts.closed}</Text>
+              <Text style={[styles.summaryLabel, activeTab === 'closed' && styles.summaryLabelActive]}>Closed</Text>
+            </TouchableOpacity>
+            <View style={styles.summaryDivider} />
+            <TouchableOpacity 
+              style={[styles.summaryItem, activeTab === 'upcoming' && styles.summaryItemActive]}
+              onPress={() => {
+                setActiveTab('upcoming');
+                refreshData();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.summaryCount, activeTab === 'upcoming' && styles.summaryCountActive]}>{counts.upcoming}</Text>
+              <Text style={[styles.summaryLabel, activeTab === 'upcoming' && styles.summaryLabelActive]}>Upcoming</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Cases List */}
