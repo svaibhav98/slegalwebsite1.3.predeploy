@@ -235,13 +235,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.textSecondary,
-    marginBottom: 32,
+    marginBottom: 24,
     textAlign: 'center',
     paddingHorizontal: 20,
+    lineHeight: 22,
   },
-  infoCard: {
+  refCard: {
+    width: '100%',
+    backgroundColor: COLORS.primary + '15',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.primary + '30',
+  },
+  refLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  refId: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.primary,
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  refNote: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
+  },
+  summaryCard: {
     width: '100%',
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -253,28 +283,56 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  infoRow: {
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 20,
+  },
+  summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+    marginBottom: 16,
   },
-  infoContent: {
+  summaryContent: {
     flex: 1,
   },
-  infoLabel: {
+  summaryLabel: {
     fontSize: 12,
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
-  infoValue: {
-    fontSize: 16,
+  summaryValue: {
+    fontSize: 15,
     fontWeight: '600',
     color: COLORS.textPrimary,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.warning + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.warning,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.warning,
   },
   divider: {
     height: 1,
     backgroundColor: COLORS.background,
-    marginVertical: 16,
+    marginBottom: 16,
   },
   nextStepsCard: {
     width: '100%',
@@ -326,36 +384,23 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 18,
   },
-  noteBox: {
+  downloadButton: {
     width: '100%',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    backgroundColor: COLORS.warning + '15',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-  },
-  primaryButton: {
-    width: '100%',
     backgroundColor: COLORS.primary,
     padding: 18,
     borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 12,
+    gap: 8,
   },
-  primaryButtonText: {
+  downloadButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.white,
   },
-  secondaryButton: {
+  homeButton: {
     width: '100%',
     backgroundColor: COLORS.white,
     padding: 18,
@@ -364,7 +409,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.primary,
   },
-  secondaryButtonText: {
+  homeButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.primary,
