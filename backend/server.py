@@ -34,8 +34,15 @@ except ValueError:
     })
     firebase_admin.initialize_app(cred)
 
-# Initialize Firestore
-db = firestore.client()
+# Initialize Firestore (only if Firebase is enabled)
+db = None
+if FIREBASE_ENABLED:
+    try:
+        db = firestore.client()
+        print(\"✅ Firestore connected successfully\")
+    except Exception as e:
+        print(f\"⚠️  Firestore connection failed: {e}\")\nelse:
+    print(\"⚠️  Running in mock mode - Firestore not available\")
 
 # Initialize Razorpay
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_demo")
