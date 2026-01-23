@@ -352,7 +352,7 @@ export default function HomeScreen() {
           colors={[COLORS.primary, COLORS.primaryDark]}
           style={styles.floatingAIGradient}
         >
-          <MaterialCommunityIcons name="robot-happy" size={28} color={COLORS.white} />
+          <Ionicons name="sparkles" size={28} color={COLORS.white} />
         </LinearGradient>
       </TouchableOpacity>
     </View>
