@@ -109,7 +109,7 @@ export default function LawyersScreen() {
           
           <View style={styles.logoContainer}>
             <Image 
-              source={require('../assets/logo.jpg')} 
+              source={require('../assets/logo-transparent.png')} 
               style={styles.logo}
               resizeMode="contain"
             />
