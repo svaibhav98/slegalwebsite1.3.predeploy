@@ -195,8 +195,7 @@ export default function LawyersScreen() {
                 <View style={styles.cardImageContainer}>
                   <Image 
                     source={{ uri: lawyer.image }} 
-                    style={styles.lawyerImage}
-                    defaultSource={{ uri: 'https://via.placeholder.com/55x70/E5E7EB/9CA3AF?text=L' }}
+                    style={styles.cardImage}
                   />
                 </View>
                 <View style={styles.cardContent}>
