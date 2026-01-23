@@ -45,14 +45,24 @@ const createMockUser = (phone: string): any => ({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    // Check for mock user in AsyncStorage first
-    const checkMockUser = async () => {
+    // Check for guest mode or mock user in AsyncStorage first
+    const checkAuth = async () => {
       try {
+        const guestMode = await AsyncStorage.getItem('isGuest');
+        if (guestMode === 'true') {
+          setIsGuest(true);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         const mockPhone = await AsyncStorage.getItem('mockUserPhone');
         if (mockPhone) {
           setUser(createMockUser(mockPhone));
+          setIsGuest(false);
           setLoading(false);
           return;
         }
@@ -63,20 +73,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fall back to Firebase auth state
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         setUser(firebaseUser);
+        setIsGuest(false);
         setLoading(false);
       });
 
       return unsubscribe;
     };
 
-    checkMockUser();
+    checkAuth();
   }, []);
 
   const signOut = async () => {
     try {
       await AsyncStorage.removeItem('mockUserPhone');
+      await AsyncStorage.removeItem('isGuest');
       await firebaseSignOut(auth);
       setUser(null);
+      setIsGuest(false);
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -86,14 +99,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setMockUser = async (phone: string) => {
     try {
       await AsyncStorage.setItem('mockUserPhone', phone);
+      await AsyncStorage.removeItem('isGuest');
       setUser(createMockUser(phone));
+      setIsGuest(false);
     } catch (error) {
       console.error('Error setting mock user:', error);
     }
   };
 
+  const setGuestMode = async () => {
+    try {
+      await AsyncStorage.setItem('isGuest', 'true');
+      await AsyncStorage.removeItem('mockUserPhone');
+      setIsGuest(true);
+      setUser(null);
+    } catch (error) {
+      console.error('Error setting guest mode:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, setMockUser }}>
+    <AuthContext.Provider value={{ user, loading, isGuest, signOut, setMockUser, setGuestMode }}>
       {children}
     </AuthContext.Provider>
   );
