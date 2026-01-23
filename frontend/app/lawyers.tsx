@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   cardImageContainer: {
     marginRight: 10,
   },
-  lawyerImage: {
+  cardImage: {
     width: 50,
     height: 65,
     borderRadius: 10,
