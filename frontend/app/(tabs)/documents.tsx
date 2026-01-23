@@ -443,7 +443,10 @@ export default function DocumentsScreen() {
                   <Ionicons name="bookmark" size={22} color={COLORS.amber} />
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity style={styles.docActionBtn} onPress={() => handleSaveDocument(doc.id)}>
+                <TouchableOpacity 
+                  style={styles.docActionBtn} 
+                  onPress={() => doc.isSaved ? handleRemoveFromSaved(doc.id) : handleSaveDocument(doc.id)}
+                >
                   <Ionicons name={doc.isSaved ? 'bookmark' : 'bookmark-outline'} size={22} color={doc.isSaved ? COLORS.amber : COLORS.textMuted} />
                 </TouchableOpacity>
               )}
