@@ -14,6 +14,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getLawyers, CATEGORIES, Lawyer, LawyerPackage } from '../services/lawyersData';
+import BottomNavBar from '../components/BottomNavBar';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 52) / 2;
