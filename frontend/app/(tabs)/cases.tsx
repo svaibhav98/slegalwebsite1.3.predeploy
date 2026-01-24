@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.white,
+    color: COLORS.textPrimary,
   },
   headerSpacer: {
     width: 44,
