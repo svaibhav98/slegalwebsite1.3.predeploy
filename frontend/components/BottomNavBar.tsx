@@ -44,7 +44,7 @@ export default function BottomNavBar({ activeTab }: BottomNavBarProps) {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {TAB_ITEMS.map((tab) => {
         const isActive = currentTab === tab.name;
         return (
