@@ -589,31 +589,50 @@ def get_cors_origins():
     """
     Get CORS origins with production safety.
     - Development: Allow * (wildcard)
-    - Production: Require explicit domain list, reject wildcard
+    - Production: FAIL FAST if origins are missing, empty, or wildcard
     """
-    raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+    raw_origins = os.getenv("ALLOWED_ORIGINS", "")
     is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
     
-    if raw_origins.strip() == "*":
-        if is_production:
-            # FAIL FAST in production with wildcard CORS
-            print("⚠️  SECURITY WARNING: ALLOWED_ORIGINS=* is not safe for production!")
-            print("   Set ALLOWED_ORIGINS to explicit domain list (comma-separated)")
-            print("   Example: ALLOWED_ORIGINS=https://sunolegal.com,https://app.sunolegal.com")
-            print("   Falling back to restrictive default: blocking all cross-origin requests")
-            return []  # Block all CORS in production if wildcard is set
-        else:
-            print("🔶 CORS: Wildcard (*) enabled - Development mode only")
-            return ["*"]
-    
-    # Parse comma-separated origins
+    # Robust parsing: split by comma, trim whitespace, drop empty strings
     origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
     
-    if not origins:
-        print("⚠️  WARNING: No valid CORS origins configured")
-        return []
+    # Check for wildcard
+    is_wildcard = len(origins) == 1 and origins[0] == "*"
     
-    print(f"✅ CORS configured for: {origins}")
+    if is_production:
+        # FAIL FAST in production with invalid CORS configuration
+        if not raw_origins or not origins or is_wildcard:
+            error_msg = """
+╔══════════════════════════════════════════════════════════════════╗
+║  FATAL: Production requires explicit ALLOWED_ORIGINS list        ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Current value: {current}
+║                                                                  ║
+║  ALLOWED_ORIGINS must be a comma-separated list of domains.      ║
+║  Wildcard (*) is NOT allowed in production.                      ║
+║                                                                  ║
+║  Example:                                                        ║
+║    ALLOWED_ORIGINS=https://sunolegal.com,https://app.sunolegal.com
+║                                                                  ║
+║  Fix your .env file and restart the server.                      ║
+╚══════════════════════════════════════════════════════════════════╝
+""".format(current=repr(raw_origins) if raw_origins else "(empty/missing)")
+            print(error_msg)
+            raise RuntimeError("Production requires explicit ALLOWED_ORIGINS list. Wildcard (*) or empty values are not allowed.")
+        
+        # Valid production config - log the origins
+        print(f"✅ CORS [PRODUCTION]: Configured for {len(origins)} origin(s):")
+        for origin in origins:
+            print(f"   - {origin}")
+        return origins
+    
+    # Development mode
+    if is_wildcard or not origins:
+        print("🔶 CORS [DEVELOPMENT]: Wildcard (*) enabled")
+        return ["*"]
+    
+    print(f"🔶 CORS [DEVELOPMENT]: Configured for: {origins}")
     return origins
 
 ALLOWED_ORIGINS = get_cors_origins()
