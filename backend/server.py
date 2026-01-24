@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, Header, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
@@ -9,6 +9,8 @@ import io
 import hmac
 import hashlib
 import uuid
+import base64
+import secrets
 from dotenv import load_dotenv
 
 # Rate limiting
