@@ -475,10 +475,10 @@ export default function DocumentsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF5F0" />
       
       {/* Header */}
-      <LinearGradient colors={['#1A1A2E', '#2B2D42']} style={styles.header}>
+      <LinearGradient colors={['#FFF5F0', '#FFFFFF']} style={styles.header}>
         <View style={styles.headerContent}>
           <Image 
             source={require('../../assets/logo-transparent.png')} 
@@ -493,7 +493,7 @@ export default function DocumentsScreen() {
             style={styles.addButton} 
             onPress={() => router.push('/lawyers')}
           >
-            <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.white} />
+            <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.textPrimary} />
             <Text style={styles.addButtonText}>Find Lawyer</Text>
           </TouchableOpacity>
         </View>
