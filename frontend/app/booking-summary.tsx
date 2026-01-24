@@ -208,6 +208,9 @@ export default function BookingSummaryScreen() {
             <Text style={styles.payButtonText}>Proceed to Payment</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Bottom Navigation Bar */}
+        <BottomNavBar activeTab="home" />
       </View>
     </>
   );
