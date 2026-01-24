@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const COLORS = {
   primary: '#FF9933',
@@ -26,11 +25,9 @@ interface BottomNavBarProps {
 export default function BottomNavBar({ activeTab }: BottomNavBarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const insets = useSafeAreaInsets();
   
   const getActiveTab = () => {
     if (activeTab) return activeTab;
-    // Determine active tab from pathname
     for (const tab of TAB_ITEMS) {
       if (pathname.includes(tab.name)) return tab.name;
     }
@@ -44,7 +41,7 @@ export default function BottomNavBar({ activeTab }: BottomNavBarProps) {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={styles.container}>
       {TAB_ITEMS.map((tab) => {
         const isActive = currentTab === tab.name;
         return (
@@ -72,12 +69,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingTop: 8,
-    height: 56,
+    height: Platform.OS === 'ios' ? 50 : 56,
+    paddingBottom: 0,
+    paddingTop: 0,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: Platform.OS === 'ios' ? 6 : 8,
   },
 });
