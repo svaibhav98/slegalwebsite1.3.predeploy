@@ -71,12 +71,14 @@ class MockFirestoreDB:
         self._data = {
             "users": {},
             "lawyers": {},
+            "lawyer_applications": {},  # For lawyer verification workflow
             "chats": {},
             "documents": {},
             "bookings": {},
             "cases": {},
             "laws": {},
             "payments": {},  # For tracking webhook idempotency
+            "webhook_events": {},  # For webhook idempotency by event_id
         }
         self._seed_initial_data()
     
