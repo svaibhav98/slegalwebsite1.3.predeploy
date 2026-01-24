@@ -585,11 +585,28 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # In production, set ALLOWED_ORIGINS to comma-separated list of domains
 # Example: ALLOWED_ORIGINS=https://sunolegal.com,https://app.sunolegal.com
 
+def validate_origin(origin: str, is_production: bool) -> tuple[bool, str]:
+    """
+    Validate a single CORS origin.
+    Returns (is_valid, error_message).
+    """
+    # Check scheme (must be http:// or https://)
+    if not origin.startswith("http://") and not origin.startswith("https://"):
+        return False, f"Missing scheme (http:// or https://): {origin}"
+    
+    # In production, block localhost/127.0.0.1
+    if is_production:
+        lower_origin = origin.lower()
+        if "localhost" in lower_origin or "127.0.0.1" in lower_origin:
+            return False, f"Localhost origins not allowed in production: {origin}"
+    
+    return True, ""
+
 def get_cors_origins():
     """
     Get CORS origins with production safety.
-    - Development: Allow * (wildcard)
-    - Production: FAIL FAST if origins are missing, empty, or wildcard
+    - Development: Allow * (wildcard) and localhost
+    - Production: FAIL FAST if origins are missing, empty, wildcard, or invalid
     """
     raw_origins = os.getenv("ALLOWED_ORIGINS", "")
     is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
@@ -621,6 +638,32 @@ def get_cors_origins():
             print(error_msg)
             raise RuntimeError("Production requires explicit ALLOWED_ORIGINS list. Wildcard (*) or empty values are not allowed.")
         
+        # Validate each origin in production
+        validation_errors = []
+        for origin in origins:
+            is_valid, error = validate_origin(origin, is_production=True)
+            if not is_valid:
+                validation_errors.append(error)
+        
+        if validation_errors:
+            error_msg = """
+╔══════════════════════════════════════════════════════════════════╗
+║  FATAL: Invalid ALLOWED_ORIGINS for production                   ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Validation errors:                                              ║
+{errors}
+║                                                                  ║
+║  Requirements:                                                   ║
+║    - Each origin must start with http:// or https://             ║
+║    - Localhost/127.0.0.1 origins are NOT allowed in production   ║
+║                                                                  ║
+║  Example:                                                        ║
+║    ALLOWED_ORIGINS=https://sunolegal.com,https://app.sunolegal.com
+╚══════════════════════════════════════════════════════════════════╝
+""".format(errors="\n".join([f"║    - {e}" for e in validation_errors]))
+            print(error_msg)
+            raise RuntimeError(f"Invalid ALLOWED_ORIGINS for production: {'; '.join(validation_errors)}")
+        
         # Valid production config - log the origins
         print(f"✅ CORS [PRODUCTION]: Configured for {len(origins)} origin(s):")
         for origin in origins:
@@ -632,8 +675,21 @@ def get_cors_origins():
         print("🔶 CORS [DEVELOPMENT]: Wildcard (*) enabled")
         return ["*"]
     
-    print(f"🔶 CORS [DEVELOPMENT]: Configured for: {origins}")
-    return origins
+    # Validate origins in development (warn but don't fail)
+    valid_origins = []
+    for origin in origins:
+        is_valid, error = validate_origin(origin, is_production=False)
+        if is_valid:
+            valid_origins.append(origin)
+        else:
+            print(f"⚠️  CORS [DEVELOPMENT]: Skipping invalid origin - {error}")
+    
+    if not valid_origins:
+        print("🔶 CORS [DEVELOPMENT]: No valid origins, falling back to wildcard (*)")
+        return ["*"]
+    
+    print(f"🔶 CORS [DEVELOPMENT]: Configured for: {valid_origins}")
+    return valid_origins
 
 ALLOWED_ORIGINS = get_cors_origins()
 
