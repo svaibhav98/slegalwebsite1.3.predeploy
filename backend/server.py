@@ -1845,91 +1845,145 @@ async def razorpay_webhook(
 ):
     """
     Razorpay webhook handler for payment events.
-    Handles: payment.captured, payment.failed, payment.authorized
+    
+    PRODUCTION BEHAVIOR:
+    - Invalid signature → HTTP 400 (Razorpay will retry)
+    - Duplicate event_id → HTTP 200 (already processed, ignore safely)
+    - Temporary failure → HTTP 500 (Razorpay will retry)
+    - Success → HTTP 200
+    
+    NO blanket 200 on errors - proper status codes for proper retry behavior.
     """
+    import json
+    
     # Get signature from header
     signature = request.headers.get("X-Razorpay-Signature", "")
     
     # Get raw body for signature verification
     body = await request.body()
     
-    # Verify signature (skip in mock mode)
-    if RAZORPAY_KEY_SECRET != "demo_secret":
+    # PRODUCTION: Verify signature (skip only in demo_secret mock mode)
+    is_mock_mode = RAZORPAY_KEY_SECRET == "demo_secret"
+    
+    if not is_mock_mode:
+        if not signature:
+            # Invalid signature → HTTP 400
+            raise HTTPException(status_code=400, detail="Missing signature header")
+        
         if not verify_razorpay_signature(body, signature):
+            # Invalid signature → HTTP 400
             raise HTTPException(status_code=400, detail="Invalid signature")
     
     # Parse event
-    import json
     try:
         event = json.loads(body)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
     
+    # Extract event details
+    event_id = event.get("id")  # Razorpay event ID for idempotency
     event_type = event.get("event")
     payload = event.get("payload", {}).get("payment", {}).get("entity", {})
     
     payment_id = payload.get("id")
     order_id = payload.get("order_id")
     
-    # Idempotency check
-    existing_payment = db.collection("payments").document(payment_id).get() if payment_id else None
-    if existing_payment and existing_payment.exists:
-        return {"success": True, "message": "Event already processed"}
+    # IDEMPOTENCY: Check if event_id was already processed
+    if event_id:
+        existing_event = db.collection("webhook_events").document(event_id).get()
+        if existing_event and existing_event.exists:
+            # Duplicate event_id → HTTP 200 (ignore safely, don't reprocess)
+            return JSONResponse(
+                status_code=200,
+                content={"success": True, "message": "Event already processed", "event_id": event_id}
+            )
     
-    # Process based on event type
-    if event_type == "payment.captured":
-        # Payment successful
-        if order_id:
-            bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
-            for booking in bookings:
-                db.collection("bookings").document(booking.id).update({
-                    "status": "confirmed",
-                    "razorpay_payment_id": payment_id,
-                    "payment_captured_at": datetime.now().isoformat()
+    # Also check payment_id for backwards compatibility
+    if payment_id:
+        existing_payment = db.collection("payments").document(payment_id).get()
+        if existing_payment and existing_payment.exists:
+            return JSONResponse(
+                status_code=200,
+                content={"success": True, "message": "Payment already processed", "payment_id": payment_id}
+            )
+    
+    try:
+        # Process based on event type
+        if event_type == "payment.captured":
+            # Payment successful
+            if order_id:
+                bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
+                for booking in bookings:
+                    db.collection("bookings").document(booking.id).update({
+                        "status": "confirmed",
+                        "razorpay_payment_id": payment_id,
+                        "payment_captured_at": datetime.now().isoformat()
+                    })
+            
+            # Record payment for idempotency
+            if payment_id:
+                db.collection("payments").document(payment_id).set({
+                    "payment_id": payment_id,
+                    "order_id": order_id,
+                    "status": "captured",
+                    "amount": payload.get("amount"),
+                    "processed_at": datetime.now().isoformat()
                 })
         
-        # Record payment for idempotency
-        if payment_id:
-            db.collection("payments").document(payment_id).set({
-                "payment_id": payment_id,
-                "order_id": order_id,
-                "status": "captured",
-                "amount": payload.get("amount"),
-                "processed_at": datetime.now().isoformat()
-            })
-    
-    elif event_type == "payment.failed":
-        # Payment failed
-        if order_id:
-            bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
-            for booking in bookings:
-                db.collection("bookings").document(booking.id).update({
-                    "status": "payment_failed",
-                    "failure_reason": payload.get("error_description", "Unknown error"),
-                    "payment_failed_at": datetime.now().isoformat()
+        elif event_type == "payment.failed":
+            # Payment failed
+            if order_id:
+                bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
+                for booking in bookings:
+                    db.collection("bookings").document(booking.id).update({
+                        "status": "payment_failed",
+                        "failure_reason": payload.get("error_description", "Unknown error"),
+                        "payment_failed_at": datetime.now().isoformat()
+                    })
+            
+            if payment_id:
+                db.collection("payments").document(payment_id).set({
+                    "payment_id": payment_id,
+                    "order_id": order_id,
+                    "status": "failed",
+                    "error": payload.get("error_description"),
+                    "processed_at": datetime.now().isoformat()
                 })
         
-        if payment_id:
-            db.collection("payments").document(payment_id).set({
+        elif event_type == "payment.authorized":
+            # Payment authorized (not yet captured)
+            if order_id:
+                bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
+                for booking in bookings:
+                    db.collection("bookings").document(booking.id).update({
+                        "status": "authorized",
+                        "razorpay_payment_id": payment_id,
+                        "payment_authorized_at": datetime.now().isoformat()
+                    })
+        
+        # Record event for idempotency
+        if event_id:
+            db.collection("webhook_events").document(event_id).set({
+                "event_id": event_id,
+                "event_type": event_type,
                 "payment_id": payment_id,
                 "order_id": order_id,
-                "status": "failed",
-                "error": payload.get("error_description"),
                 "processed_at": datetime.now().isoformat()
             })
+        
+        # Success → HTTP 200
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": f"Processed {event_type}", "event_id": event_id}
+        )
     
-    elif event_type == "payment.authorized":
-        # Payment authorized (not yet captured)
-        if order_id:
-            bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
-            for booking in bookings:
-                db.collection("bookings").document(booking.id).update({
-                    "status": "authorized",
-                    "razorpay_payment_id": payment_id,
-                    "payment_authorized_at": datetime.now().isoformat()
-                })
-    
-    return {"success": True, "message": f"Processed {event_type}"}
+    except Exception as e:
+        # Temporary failure → HTTP 500 (Razorpay will retry)
+        # Do NOT return 200 on errors!
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Processing failed: {str(e)}"}
+        )
 
 # ============= CASE TRACKING ENDPOINTS =============
 
