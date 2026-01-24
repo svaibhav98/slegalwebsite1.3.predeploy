@@ -787,7 +787,17 @@ class LawyerApplication(BaseModel):
 
 # ============= ADMIN AUTHENTICATION =============
 
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "demo_admin_secret_change_in_production")
+def get_admin_secret():
+    """Get admin secret with production safety."""
+    secret = os.getenv("ADMIN_SECRET", "")
+    is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    
+    if is_production and (not secret or secret == "demo_admin_secret_change_in_production"):
+        raise RuntimeError("ADMIN_SECRET must be set to a secure value in production")
+    
+    return secret if secret else "demo_admin_secret_change_in_production"
+
+ADMIN_SECRET = get_admin_secret()
 
 async def require_admin(authorization: str = Header(None), x_admin_secret: str = Header(None)):
     """
