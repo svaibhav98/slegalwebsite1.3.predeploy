@@ -13,8 +13,8 @@ export default function TabLayout() {
         backgroundColor: Colors.background, 
         borderTopColor: Colors.border, 
         borderTopWidth: 1, 
-        height: 60, 
-        paddingBottom: 8, 
+        height: 56, 
+        paddingBottom: 4, 
         paddingTop: 8 
       },
       tabBarShowLabel: false
