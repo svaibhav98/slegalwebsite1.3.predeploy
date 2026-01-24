@@ -448,6 +448,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  required: {
+    color: '#EF4444',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
   input: {
     backgroundColor: COLORS.surface,
     borderRadius: 14,
