@@ -12,6 +12,7 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getLawyerById, Lawyer } from '../services/lawyersData';
+import BottomNavBar from '../components/BottomNavBar';
 
 const COLORS = {
   primary: '#FF9933',
