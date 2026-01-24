@@ -905,6 +905,139 @@ def generate_affidavit_pdf(data: Dict[str, Any]) -> io.BytesIO:
     return buffer
 
 
+def generate_consumer_complaint_pdf(data: Dict[str, Any]) -> io.BytesIO:
+    """Generate Consumer Complaint PDF (under Consumer Protection Act, 2019)"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], alignment=TA_CENTER, fontSize=16, spaceAfter=15)
+    heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=11, spaceAfter=8, spaceBefore=12)
+    body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, alignment=TA_JUSTIFY, spaceAfter=8)
+    
+    elements = []
+    
+    # Header
+    forum_level = data.get('forum_level', 'District Consumer Disputes Redressal Forum')
+    elements.append(Paragraph(f"BEFORE THE {forum_level.upper()}", title_style))
+    elements.append(Paragraph(f"At {data.get('forum_city', '_____________')}", 
+                              ParagraphStyle('Subtitle', alignment=TA_CENTER, fontSize=10, spaceAfter=20)))
+    
+    # Case Number (if assigned)
+    if data.get('case_number'):
+        elements.append(Paragraph(f"Consumer Complaint No.: {data.get('case_number')}", body_style))
+    
+    elements.append(Spacer(1, 15))
+    
+    # Complainant Details
+    elements.append(Paragraph("IN THE MATTER OF:", heading_style))
+    elements.append(Paragraph(f"""
+    <b>{data.get('complainant_name', '_____________')}</b><br/>
+    S/o, D/o, W/o: {data.get('complainant_parent', '_____________')}<br/>
+    Age: {data.get('complainant_age', '_____________')} years<br/>
+    Occupation: {data.get('complainant_occupation', '_____________')}<br/>
+    Address: {data.get('complainant_address', '_____________')}<br/>
+    Phone: {data.get('complainant_phone', '_____________')}<br/>
+    Email: {data.get('complainant_email', '_____________')}
+    """, body_style))
+    elements.append(Paragraph("...COMPLAINANT", ParagraphStyle('Right', alignment=TA_LEFT, fontSize=10, spaceAfter=15, spaceBefore=5)))
+    
+    elements.append(Paragraph("VERSUS", ParagraphStyle('Center', alignment=TA_CENTER, fontSize=11, spaceAfter=15)))
+    
+    # Opposite Party Details
+    elements.append(Paragraph(f"""
+    <b>{data.get('opposite_party_name', '_____________')}</b><br/>
+    Through: {data.get('opposite_party_representative', 'Its Proprietor/Director/Manager')}<br/>
+    Address: {data.get('opposite_party_address', '_____________')}<br/>
+    Phone: {data.get('opposite_party_phone', '_____________')}<br/>
+    Email: {data.get('opposite_party_email', '_____________')}
+    """, body_style))
+    elements.append(Paragraph("...OPPOSITE PARTY", ParagraphStyle('Right', alignment=TA_LEFT, fontSize=10, spaceAfter=15, spaceBefore=5)))
+    
+    # Subject
+    elements.append(Paragraph("SUBJECT:", heading_style))
+    elements.append(Paragraph(f"Complaint under Section 35 of Consumer Protection Act, 2019 for {data.get('subject', 'deficiency in service / defect in goods / unfair trade practice')}", body_style))
+    
+    # Transaction Details
+    elements.append(Paragraph("TRANSACTION DETAILS:", heading_style))
+    elements.append(Paragraph(f"""
+    <b>Nature of Transaction:</b> {data.get('transaction_nature', 'Purchase of goods / Availing of service')}<br/>
+    <b>Date of Transaction:</b> {data.get('transaction_date', '_____________')}<br/>
+    <b>Invoice/Receipt No.:</b> {data.get('invoice_number', '_____________')}<br/>
+    <b>Amount Paid:</b> Rs. {data.get('amount_paid', '_____________')}/-<br/>
+    <b>Mode of Payment:</b> {data.get('payment_mode', '_____________')}
+    """, body_style))
+    
+    # Facts of the Case
+    elements.append(Paragraph("FACTS OF THE CASE:", heading_style))
+    facts = data.get('facts', ['_____________'])
+    for i, fact in enumerate(facts, 1):
+        elements.append(Paragraph(f"{i}. {fact}", body_style))
+    
+    # Grievance
+    elements.append(Paragraph("GRIEVANCE / CAUSE OF ACTION:", heading_style))
+    elements.append(Paragraph(data.get('grievance', 'The complainant has suffered due to the deficiency in service / defect in goods / unfair trade practice by the opposite party.'), body_style))
+    
+    # Relief Sought
+    elements.append(Paragraph("RELIEF SOUGHT:", heading_style))
+    reliefs = data.get('reliefs', [
+        'Refund of amount paid with interest',
+        'Compensation for mental agony and harassment',
+        'Cost of litigation'
+    ])
+    for i, relief in enumerate(reliefs, 1):
+        elements.append(Paragraph(f"{i}. {relief}", body_style))
+    
+    # Declaration
+    elements.append(Paragraph("DECLARATION:", heading_style))
+    elements.append(Paragraph("""
+    I, the complainant, do hereby declare that:
+    1. The facts stated above are true and correct to the best of my knowledge and belief.
+    2. I have not filed any other complaint in any other forum regarding this matter.
+    3. The cause of action arose within the territorial jurisdiction of this Hon'ble Forum.
+    """, body_style))
+    
+    # Documents
+    elements.append(Paragraph("LIST OF DOCUMENTS:", heading_style))
+    documents = data.get('documents', [
+        'Copy of Invoice/Receipt',
+        'Proof of Payment',
+        'Correspondence with Opposite Party',
+        'Photographs (if any)',
+        'ID Proof of Complainant'
+    ])
+    for i, doc in enumerate(documents, 1):
+        elements.append(Paragraph(f"{i}. {doc}", body_style))
+    
+    elements.append(Spacer(1, 30))
+    
+    # Signature
+    elements.append(Paragraph(f"Place: {data.get('place', '_____________')}", body_style))
+    elements.append(Paragraph(f"Date: {data.get('date', datetime.now().strftime('%d/%m/%Y'))}", body_style))
+    elements.append(Spacer(1, 25))
+    elements.append(Paragraph("_______________", body_style))
+    elements.append(Paragraph("(Signature of Complainant)", body_style))
+    elements.append(Paragraph(f"Name: {data.get('complainant_name', '_____________')}", body_style))
+    
+    # Verification
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph("VERIFICATION", heading_style))
+    elements.append(Paragraph(f"""
+    I, {data.get('complainant_name', '_____________')}, the above-named complainant, do hereby verify that the contents 
+    of this complaint are true and correct to the best of my knowledge and belief and nothing material has been 
+    concealed therefrom.
+    
+    Verified at {data.get('verification_place', data.get('place', '_____________'))} on this day of {data.get('date', datetime.now().strftime('%d/%m/%Y'))}.
+    """, body_style))
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph("_______________", body_style))
+    elements.append(Paragraph("(Signature of Complainant)", body_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
 @app.post("/api/documents/generate")
 @limiter.limit("10/minute")  # Rate limit: 10 documents per minute
 async def generate_document(
