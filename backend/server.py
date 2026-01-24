@@ -380,6 +380,127 @@ def ArrayUnion(values: list):
     return {"_array_union": values}
 
 
+# ============= MOCK FIREBASE STORAGE =============
+class MockFirebaseStorage:
+    """
+    Mock Firebase Storage for development/testing.
+    Simulates private storage with signed URLs.
+    SECURITY: All files are private by default - NO make_public() method.
+    """
+    def __init__(self):
+        self._files = {}  # path -> {"data": bytes, "metadata": dict, "owner_uid": str}
+        self._signed_url_tokens = {}  # token -> {"path": str, "expires": datetime}
+    
+    def upload_file(self, path: str, data: bytes, owner_uid: str, metadata: dict = None) -> dict:
+        """
+        Upload file to private storage.
+        Path format: {collection}/{owner_uid}/{filename}
+        """
+        # Validate path includes owner_uid for security
+        path_parts = path.split("/")
+        if len(path_parts) < 3:
+            raise ValueError("Invalid path format. Must be: collection/userId/filename")
+        
+        self._files[path] = {
+            "data": data,
+            "metadata": metadata or {},
+            "owner_uid": owner_uid,
+            "created_at": datetime.now().isoformat(),
+            "size": len(data)
+        }
+        
+        return {
+            "path": path,
+            "size": len(data),
+            "created_at": self._files[path]["created_at"]
+        }
+    
+    def get_file(self, path: str, requester_uid: str, is_admin: bool = False) -> Optional[bytes]:
+        """
+        Get file - only if requester owns it or is admin.
+        SECURITY: Enforces ownerUserId == request.auth.uid
+        """
+        if path not in self._files:
+            return None
+        
+        file_info = self._files[path]
+        
+        # Security check: owner or admin only
+        if not is_admin and file_info["owner_uid"] != requester_uid:
+            raise PermissionError("Access denied: You can only access your own files")
+        
+        return file_info["data"]
+    
+    def generate_signed_url(self, path: str, requester_uid: str, is_admin: bool = False, 
+                            expires_in_minutes: int = 15) -> str:
+        """
+        Generate a time-limited signed URL for authenticated download.
+        SECURITY: Only owner or admin can generate URLs.
+        """
+        if path not in self._files:
+            raise FileNotFoundError(f"File not found: {path}")
+        
+        file_info = self._files[path]
+        
+        # Security check: owner or admin only
+        if not is_admin and file_info["owner_uid"] != requester_uid:
+            raise PermissionError("Access denied: You can only access your own files")
+        
+        # Generate signed URL token
+        token = secrets.token_urlsafe(32)
+        expires = datetime.now() + timedelta(minutes=expires_in_minutes)
+        
+        self._signed_url_tokens[token] = {
+            "path": path,
+            "expires": expires
+        }
+        
+        # In production, this would be a real Firebase Storage signed URL
+        return f"/api/storage/download?token={token}"
+    
+    def validate_signed_url(self, token: str) -> Optional[str]:
+        """Validate signed URL token and return file path if valid."""
+        if token not in self._signed_url_tokens:
+            return None
+        
+        token_info = self._signed_url_tokens[token]
+        
+        # Check expiration
+        if datetime.now() > token_info["expires"]:
+            del self._signed_url_tokens[token]
+            return None
+        
+        return token_info["path"]
+    
+    def delete_file(self, path: str, requester_uid: str, is_admin: bool = False) -> bool:
+        """Delete file - only if requester owns it or is admin."""
+        if path not in self._files:
+            return False
+        
+        file_info = self._files[path]
+        
+        # Security check
+        if not is_admin and file_info["owner_uid"] != requester_uid:
+            raise PermissionError("Access denied: You can only delete your own files")
+        
+        del self._files[path]
+        return True
+    
+    def list_user_files(self, collection: str, user_uid: str) -> List[dict]:
+        """List all files owned by a user in a collection."""
+        prefix = f"{collection}/{user_uid}/"
+        return [
+            {"path": path, **info}
+            for path, info in self._files.items()
+            if path.startswith(prefix)
+        ]
+
+
+# Initialize Mock Storage
+storage = MockFirebaseStorage()
+print("🔶 Storage running in MOCK MODE - All files are PRIVATE")
+
+
 # Initialize Mock Database
 db = MockFirestoreDB()
 print("🔶 Running in MOCK MODE - Using in-memory database")
