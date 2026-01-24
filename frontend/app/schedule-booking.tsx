@@ -179,6 +179,9 @@ export default function ScheduleBookingScreen() {
             <Text style={styles.confirmButtonText}>Confirm Schedule</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Bottom Navigation Bar */}
+        <BottomNavBar activeTab="home" />
       </View>
     </>
   );
