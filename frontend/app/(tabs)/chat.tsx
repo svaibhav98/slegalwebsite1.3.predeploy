@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
   greetingDescription: {
     fontSize: 15,
-    color: COLORS.white,
+    color: '#4B5563',
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 20,
