@@ -581,12 +581,46 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ============= CORS CONFIGURATION =============
-# In production, replace with your actual domains
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+# Production-safe CORS: Wildcard (*) only allowed in development mode
+# In production, set ALLOWED_ORIGINS to comma-separated list of domains
+# Example: ALLOWED_ORIGINS=https://sunolegal.com,https://app.sunolegal.com
+
+def get_cors_origins():
+    """
+    Get CORS origins with production safety.
+    - Development: Allow * (wildcard)
+    - Production: Require explicit domain list, reject wildcard
+    """
+    raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+    is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    
+    if raw_origins.strip() == "*":
+        if is_production:
+            # FAIL FAST in production with wildcard CORS
+            print("⚠️  SECURITY WARNING: ALLOWED_ORIGINS=* is not safe for production!")
+            print("   Set ALLOWED_ORIGINS to explicit domain list (comma-separated)")
+            print("   Example: ALLOWED_ORIGINS=https://sunolegal.com,https://app.sunolegal.com")
+            print("   Falling back to restrictive default: blocking all cross-origin requests")
+            return []  # Block all CORS in production if wildcard is set
+        else:
+            print("🔶 CORS: Wildcard (*) enabled - Development mode only")
+            return ["*"]
+    
+    # Parse comma-separated origins
+    origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    
+    if not origins:
+        print("⚠️  WARNING: No valid CORS origins configured")
+        return []
+    
+    print(f"✅ CORS configured for: {origins}")
+    return origins
+
+ALLOWED_ORIGINS = get_cors_origins()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS[0] != "*" else ["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
