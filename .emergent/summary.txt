@@ -1,167 +1,204 @@
 <analysis>
+<original_problem_statement>
+The initial request was to generate this app, as it is. This evolved through extensive user feedback into building and refining a full-stack legal-tech mobile application named SunoLegal.
 
-**original_problem_statement**:
-The user wants to build a mobile-first legal-tech application for India called SunoLegal. The goal is to create a polished, production-quality MVP with a React Native (Expo) frontend and a FastAPI backend running in a mock-data mode.
+The most recent user request serves as the primary set of requirements for the next agent. It is a production-readiness checklist that moves the app from a mock state to a production-ready state.
 
-**PRODUCT REQUIREMENTS (Phase 1 MVP):**
-The user has provided detailed requirements and UI designs for several key modules, with an emphasis on implementing complete end-to-end user flows.
+**PRODUCT REQUIREMENTS (From User's Last Message):**
 
-*   **App Name:** SunoLegal – AI Legal Assistant for India
-*   **Core Philosophy:** Provide legal information, not advice. Connect users to verified lawyers.
-*   **Tech Stack:** React Native (Expo) frontend, FastAPI backend.
-*   **Backend Mode:** The backend must operate in a mock mode, serving static data from in-memory stores, without connecting to a real Firebase database for now.
-*   **UI/UX:** The user has provided specific Figma designs, task flow PDFs, and screenshots. A high-quality, professional, and polished UI that exactly matches these designs is the highest priority. All interactive elements must be functional.
-*   **Key Modules to Implement:**
-    1.  **Home Screen:** A polished dashboard with a gradient hero banner, quick access cards, and branding. (COMPLETED)
-    2.  **Join as a Lawyer:** A functional registration form for lawyers. (COMPLETED)
-    3.  **NyayAI Assistant:** A two-screen chat experience: a landing screen with suggestions, which transitions to a separate chat screen after user interaction. Must include disclaimers. (COMPLETED)
-    4.  **Laws & Schemes:** A module to browse, search, and filter laws/schemes. Includes a listing screen and a detail screen with an overview, official links, and related suggestions. (COMPLETED)
-    5.  **Case Tracker:** A module for users to manually add, track, and manage their legal cases with statuses (Ongoing, Closed, Upcoming), reminders, and a detail view. (COMPLETED)
-    6.  **Lawyer Consultation Flow:** An end-to-end flow for users to find, book, and consult with lawyers. This includes a lawyer marketplace, profile pages (as bottom sheets), package selection, scheduling, mock payment, and consultation screens. (IN PROGRESS)
+1.  **Confirm Final Production Architecture:**
+    *   Decide if Firestore will be the main DB for cases, docs, chats, lawyers, and bookings.
+    *   If yes, remove the MongoDB dependency.
+    *   If no, specify what data remains in MongoDB vs. Firestore.
+
+2.  **Firebase Implementation:**
+    *   Utilize the provided Firebase client config (frontend) and Admin service account (backend).
+    *   Deliver final Firestore security rules for all data models (users, cases, docs, etc.) with proper create/write rules and admin vs. user separation.
+
+3.  **Payments (Razorpay):**
+    *   Implement Razorpay webhooks end-to-end, including a webhook endpoint, signature verification, idempotency, and booking status updates for various payment states (captured, failed, authorized).
+
+4.  **Document Generator:**
+    *   Implement actual server-side PDF generation (using a library like ReportLab or WeasyPrint).
+    *   Store the generated PDF in Firebase Storage.
+    *   Store the document metadata in Firestore.
+    *   Return a download URL to the client.
+
+5.  **Production Hardening:**
+    *   Implement rate limiting on NyayAI and document generation endpoints.
+    *   Enforce authentication on all user-data endpoints and define strict guest mode behavior.
+    *   Restrict CORS to deployed domains only.
+    *   Add monitoring (e.g., Sentry or Cloud Error Reporting).
+    *   Add a health check endpoint.
+</original_problem_statement>
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a React Native (Expo) frontend and a Python (FastAPI) backend. The backend is in mock mode, serving hardcoded data from Python dictionaries, as requested. Several key features have been implemented to a high UI/UX standard based on user-provided designs: the Home screen, Join as Lawyer form, NyayAI two-screen chat flow, Laws & Schemes module, and the Case Tracker module. All core navigation and layouts are in place.
+A full-stack Expo (React Native) and FastAPI application, SunoLegal. The app is in a functional but mocked state. Key features include:
+- **Frontend**: A multi-tab application with screens for Home, Cases, Legal Documents, Laws & Schemes, and an AI-powered chat (NyayAI). It uses  for navigation and  for user state (including a guest mode).
+- **Backend**: A FastAPI server connected to a MongoDB database. It currently has a  endpoint and a  endpoint for populating sample data. Most of the business logic (payments, PDF generation, real auth) is not yet implemented on the backend.
+- **Features**: User login (mocked), lawyer marketplace, case tracking, document generation (mocked), AI chat interface, and a Join as Lawyer flow. The UI has undergone numerous iterative refinements based on user feedback.
 
 **Last working item**:
-- Last item agent was working: The agent started implementing the **Lawyer Consultation Flow**. It created a mock data service () and rewrote the main listing screen () to serve as the lawyer marketplace and handle the lawyer profile bottom-sheet modal. The agent's next step was to create the various booking-related screens (Scheduling, Payment, Confirmation, etc.).
-- Status: IN PROGRESS
-- Agent Testing Done: N
-- Which testing method agent to use? screenshot tool
-- User Testing Done: N
+- **Last item agent was working**: The agent was tasked with updating the NyayAI welcome screen image and providing a production-readiness checklist. The user then responded with a concrete, technical set of requirements to make the application production-ready, effectively overriding the agent's checklist with a direct order of tasks. The agent's last thought process was to confirm the database architecture and implement the user's production-hardening requirements.
+- **Status**: NOT STARTED
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**: both (Backend-heavy tasks require backend testing; frontend will need verification to ensure integrations work).
+- **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Critical Bug - Back Button on Lawyer Profile (P1)**
-    -   **Description:** The user has previously reported that the back button is not working on the lawyer profile pages. This is a critical usability bug.
-    -   **Attempted fixes:** This was flagged in the previous session but not explicitly verified. The new implementation of the lawyer flow (using a bottom sheet modal) should inherently address this, but it needs to be tested thoroughly.
-    -   **Next debug checklist:**
-        1.  Once the lawyer profile modal is functional, verify that the 'X' button and back gestures correctly close the modal and return the user to the lawyer marketplace list.
-        2.  Check the navigation logic in  and ensure  or modal dismissal logic is correctly implemented.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical usability bug that breaks a core user flow. Fixing it is essential for the app to be navigable.
-    -   **Status:** IN PROGRESS (as part of the larger Lawyer Consultation task)
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on other issue:** None.
+- **Issue 1**: The application has several recurring issues that were fixed multiple times but may not be fully resolved, indicating underlying problems.
+  - **Lawyer Consultation Slot Selection**: User repeatedly reported that two slots were selected by default. The agent made several fixes, but it's unclear if the root cause was addressed or if the user's perception of the issue was fully understood. The fix might be incomplete.
+  - **Get Lawyer Review CTA Visibility**: User reported this CTA was missing on the document generation success screen. The agent's last fix was to wrap the screen content in a . This needs to be verified to ensure it's always visible without scrolling.
+  - **Header Consistency**: This required multiple rounds of fixes. While the last fix seemed correct, any new page or change to an existing header risks re-introducing inconsistencies.
+
+  **Issues Detail:**
+  - **Issue 1: Recurring UI/UX Bugs (P1)**
+     - **Attempted fixes**:
+       - **Slot Selection**: Removed auto-selection of date in ; changed default slot count from 2 to 1 in . The user's reports were inconsistent, pointing to different parts of the flow.
+       - **Lawyer Review CTA**: Added a  to the success screen in  to ensure the button is not off-screen.
+     - **Next debug checklist**:
+       - Thoroughly test the entire lawyer booking flow ( -> ) to confirm only one slot (date or time) is ever selected by default. Verify user expectations vs. implementation.
+       - Test the document generation flow for all template types and confirm the Get Lawyer Review CTA is visible on the final screen without needing to scroll.
+     - **Why fix this issue and what will be achieved with the fix?**: Resolving these recurring issues will improve user trust and provide a more polished, production-quality experience, preventing further bug reports on the same topics.
+     - **Status**: USER VERIFICATION PENDING
+     - **Is recurring issue?**: Y
+     - **Should Test frontend/backend/both after fix?**: frontend
+     - **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1: Implement End-to-End Lawyer Consultation Flow (P0 - HIGHEST PRIORITY)**
-    -   **Description:** Build the complete lawyer consultation journey as per the user's detailed specifications and UI mockups.
-    -   **Where to resume:** The agent has created the mock data service () and the main marketplace screen (). The next step is to create the remaining screens for the booking flow:
-        1.  : Calendar and time slot selection UI.
-        2.  : Screen to confirm booking details before payment.
-        3.  : Mock payment screen.
-        4.  : Thank You screen post-payment.
-        5.  : Messenger UI for chat consultations.
-        6.  : Mock UI for voice/video calls.
-        - After creating these files, link them together to create the full end-to-end navigation flow starting from the lawyer profile modal in .
-    -   **What will be achieved with this?** A complete, polished, and functional core feature of the application, ready for user review.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on something:** None.
+None. The previous tasks were summarized as complete by the agent, but the user's final message has initiated a new, larger set of production-readiness tasks.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    *   **Implement Document Generator (P1):** Build the flow for users to select a document template (e.g., Rent Agreement), fill a form, and generate a document.
--   **Future Tasks:**
-    *   **Switch to Real Firebase Backend:** Once all UI/UX is approved and the user provides Firebase credentials, migrate the application from the mock backend to a live Firebase project (Firestore and Auth).
-    *   **Integrate Real Razorpay Payments:** Switch from mock payment UIs to the real Razorpay SDK in test mode.
-    *   **Implement Push Notifications:** Wire up Firebase Cloud Messaging (FCM) for case reminders.
-    *   **Phase 2 Features:** Ratings & reviews, escrow, etc.
+The user's final message (chat message #552) defines the immediate, high-priority tasks. These are not future tasks but the current work order.
+
+- **Task 1: Finalize Production Architecture & Database Migration (P0)**
+  - **Description**: Confirm with the user the move to Firestore as the primary database. If confirmed, remove the MongoDB dependency from the backend (, , and ) and refactor any existing backend logic to use the Firebase Admin SDK.
+  - **Files**: , , .
+- **Task 2: Implement Production-Ready Firebase Security Rules (P0)**
+  - **Description**: Write and deploy robust Firestore security rules. This must include rules for all collections (users, cases, documents, chats, lawyers, bookings) ensuring users can only access their own data and that write operations are properly validated (). It must also separate admin roles from user roles.
+  - **Files**: .
+- **Task 3: Implement Razorpay Webhooks (P0)**
+  - **Description**: Create a new webhook endpoint in the FastAPI backend (). This endpoint must handle signature verification, ensure idempotency, and update booking/payment statuses in the database (Firestore) based on webhook events (, , etc.).
+  - **Files**: .
+- **Task 4: Implement Server-Side PDF Generation (P0)**
+  - **Description**: Implement the document generation logic on the backend. This involves:
+    1. Creating an endpoint (e.g., ).
+    2. Using a Python library (e.g., ReportLab) to create a PDF from the user's input.
+    3. Uploading the generated PDF to Firebase Storage.
+    4. Storing the document's metadata and storage URL in Firestore.
+    5. Returning the download URL to the frontend.
+  - **Files**: .
+- **Task 5: Implement Backend Production Hardening (P0)**
+  - **Description**: Secure the backend API by:
+    1. Adding rate limiting to expensive endpoints like NyayAI chat and document generation.
+    2. Implementing a middleware to require authentication for all sensitive endpoints.
+    3. Configuring CORS to only allow requests from the production frontend domain.
+    4. Integrating an error monitoring service like Sentry.
+    5. Creating a  endpoint for monitoring.
+  - **Files**: .
 
 **Completed work in this session**
--   **Home Screen UI Overhaul:** Polished the  screen to perfectly match the user's design, including gradient backgrounds, icon updates, and layout corrections.
--   **Join as Lawyer Screen UI Overhaul:** Implemented the  form with a professional layout and styling.
--   **NyayAI Two-Screen Flow:** Re-architected the chat feature into a two-screen flow as requested: a landing page () and a separate conversation screen ().
--   **Laws & Schemes Module:** Implemented the complete end-to-end flow with a mock data service (), a polished listing/filtering screen (), and a detailed view screen ().
--   **Case Tracker Module:** Implemented the full feature set including a data service (), a main list/filter screen (), an Add Case form (), an Edit Case form (), and an Add Reminder form (), all matching the user's designs.
+- **UI/UX Overhaul**: Implemented numerous UI fixes and enhancements across the entire application based on iterative user feedback.
+- **Onboarding and Guest Mode**: Created splash and onboarding screens, and integrated a Continue as Guest feature into the authentication flow (, ).
+- **Feature Stubs Created**: Created multiple new screens and flows, including:
+  - Case Reminders (, ).
+  - Lawyer Verification Flow (, ).
+- **Header and Branding Alignment**: Standardized headers across , , and  pages to use a consistent theme. Applied brand colors to the Login screen.
+- **Join as Lawyer Form**: Marked mandatory fields with an asterisk for better UX.
+- **NyayAI UI**: Replaced the welcome screen's cartoon image with a more professional one and added the company logo to the header.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Mock Authentication Persistence**
-    -   **Description:** The agent struggled to maintain a consistent logged-in state during testing because the mock authentication context does not persist across page reloads in the web-based testing environment.
-    -   **Workaround:** The agent bypassed this by navigating directly to specific URLs (, , etc.) for UI verification instead of performing the full login-and-navigate flow in every test.
-    -   **Why to solve this issue and what will be achieved with this?** This is a testing-environment limitation. It will be resolved automatically when real Firebase Authentication is implemented. No immediate fix is required while in mock mode.
-    -   **Is recurring issue?** Y
+- See All Pending/In progress Issue list for recurring issues that may not be fully resolved. The primary unfixed issue is that the entire application backend is in a mock/demo state, which the new set of tasks is designed to address.
 
 **Known issue recurrence from previous fork**
--   None.
+- Not applicable. This is the first handover summary.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend:** React Native, Expo, Expo Router (file-based routing), TypeScript.
-- **Backend:** FastAPI (Python), In-memory data storage (as a mock DB).
-- **UI Implementation:** Heavy focus on matching Figma designs, using components like , , custom styled components, and icon libraries ().
-- **Development Strategy:** Mock-first development, feature-by-feature implementation based on user priority, UI/UX polish as the primary driver.
-- **Data Management:** Mock data is now organized into separate service files () which export typed arrays of objects, keeping component files cleaner.
+- **Frontend**: React Native, Expo, Expo Router (file-based routing), React Context (for auth), TypeScript.
+- **Backend**: Python, FastAPI.
+- **Database**: MongoDB (current, for mocking), **Firestore** (planned for production).
+- **Architecture**: Monorepo-style structure with separate  and  directories. The app is designed as a full-stack system but backend functionality is largely mocked.
 
 **key DB schema**
-The application uses mock data structures defined in TypeScript service files. Example for a Law:
-
+The schema is not explicitly defined. The backend uses  but no data models (like Pydantic models for MongoDB) are visible in the history. The move to Firestore will require defining collections and document structures for:
+- : {userId, name, email, etc.}
+- : {lawyerId, profile, verificationStatus, etc.}
+- : {caseId, userId, title, status, etc.}
+- : {docId, userId, type, content, storageUrl, etc.}
+- : {bookingId, userId, lawyerId, timeslot, paymentStatus, razorpayOrderId, etc.}
+- : {chatId, userId, messages: [...], etc.}
+- : {reminderId, caseId, userId, remindAt, etc.}
 
 **changes in tech stack**
-- No changes to the core tech stack. The agent has adopted a better practice of separating mock data into service files.
+- **Impending**: Migration of the primary application database from **MongoDB** to **Google Firestore** for production use.
+- **Impending**: Integration of **Firebase Storage** for file/PDF storage.
 
 **All files of reference**
--   **/app/frontend/app/lawyers.tsx**: The file currently being worked on for the Lawyer Marketplace.
--   **/app/frontend/services/lawyersData.ts**: The new mock data source for lawyers.
--   **/app/frontend/app/(tabs)/home.tsx**: Completed Home Screen.
--   **/app/frontend/app/(tabs)/chat.tsx**: Completed NyayAI Landing Screen.
--   **/app/frontend/app/nyayai-chat.tsx**: Completed NyayAI Chat Screen.
--   **/app/frontend/app/(tabs)/laws.tsx**: Completed Laws Listing Screen.
--   **/app/frontend/app/law-detail/[id].tsx**: Completed Law Detail Screen.
--   **/app/frontend/app/(tabs)/cases.tsx**: Completed Cases Listing Screen.
--   **/app/frontend/app/add-case.tsx**, : Supporting screens for the Case Tracker module.
+*   : The main file for all upcoming backend tasks.
+*   : Repeatedly modified for UI fixes (filters, header).
+*   : Repeatedly modified for UI fixes, save/unsave logic, and CTAs.
+*   : Used as the source of truth for header styling.
+*   : Core of the lawyer onboarding flow.
+*   : The acknowledgement screen that was created and refined multiple times.
+*   : Modified for branding and guest login.
+*   : Manages the critical auth/guest state.
+*   : Contains the potentially recurring slot selection bug.
+
+**Areas that need refactoring**:
+- The backend  will need a major refactor to remove MongoDB logic and implement Firebase Admin SDK, Razorpay webhooks, and PDF generation endpoints. It's currently just a stub.
+- State management on the frontend is a mix of  and a simple . As the app grows, moving server state to a library like  would be beneficial, especially with the move to a real backend.
+
+**key api endpoints**
+- : Exists.
+- : Exists for seeding mock data.
+- **To be created**:
+  - : For handling payment events.
+  - : For server-side PDF generation.
+  - All CRUD endpoints for , , , etc., once the database is finalized.
+  - Endpoints for the NyayAI chat to connect to a real LLM.
 
 **Critical Info for New Agent**
--   **UI is EVERYTHING:** The user's absolute top priority is a pixel-perfect match with the provided UI screenshots and task flows. Pay meticulous attention to spacing, colors, fonts, and component styles. Do not deviate.
--   **Follow the E2E Flow:** The user wants complete, functional end-to-end features. Implement the full navigation path for the Lawyer Consultation flow as detailed in the .
--   **Continue Mock Mode:** Do not attempt to connect to a real database or payment gateway. All data is static and served from the  files in .
--   **Testing:** Use the  to verify UI. Be aware that the testing tool has limitations with complex interactions (like clicking inside modals or on custom components). Manually verifying the code logic is key. The mock auth persistence issue means you may need to navigate to URLs directly to test screens.
--   **Restart Services:** Remember to restart the Expo service (expo: ERROR (not running)
-expo: started) after making file changes to ensure they are reflected in the preview.
+The most critical information is the user's last message (chat #552), which serves as a definitive roadmap for making the app production-ready. You are to shift focus from small UI tweaks to significant backend and infrastructure implementation. The app is currently in a mock state, and your job is to build the real services behind it (payments, database, PDF generation, security). The user has explicitly requested confirmation on the Database architecture (MongoDB vs. Firestore) before proceeding. You should start by addressing that point.
 
 **documents created in this job**
-- 
-- 
-- 
-- 
-- 
-- 
-- 
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Msg 251:** User provides extremely detailed requirements and UI screenshots for the entire **Lawyer Consultation Flow**, making it the next priority. (IN PROGRESS)
-2.  **Msg 221:** User provides detailed requirements and UI screenshots for the **Case Tracker** module. (COMPLETED)
-3.  **Msg 192:** User provides detailed requirements and UI screenshots for the **Laws & Schemes** module. (COMPLETED)
-4.  **Msg 161:** User interrupts and provides new, specific requirements for a **two-screen NyayAI flow**, with new UI images. (COMPLETED)
-5.  **Msg 104-159:** Agent attempts to implement the initial NyayAI chat, struggles with mock auth persistence, but confirms the UI is correct. (SUPERSEDED by two-screen flow)
-6.  **Msg 98:** User confirms to start with the **NyayAI Chat** flow. (ADDRESSED)
-7.  **Msg 93:** User confirms that flows should be implemented completely end-to-end and provides a Figma prototype link. (ADDRESSED)
-8.  **Msg 86:** User expresses dissatisfaction with screen-by-screen polishing and demands **end-to-end feature flows**, providing  documents. This was a major pivot in the project direction. (ADDRESSED)
-9.  **Msg 7-85:** Agent implements polished UI for Home Screen and Join as Lawyer screen based on user's priority override. (COMPLETED)
-10. **Msg 7:** User overrides the initial plan, setting a new priority: Home Screen → Join as Lawyer → Laws Detail. (ADDRESSED)
+1.  **Msg 552 (CRITICAL PENDING)**: User provided a detailed, technical checklist for production-readiness, asking the agent to confirm DB architecture, and implement real Firebase, Razorpay, and PDF generation logic, along with production hardening.
+2.  **Msg 537**: User requested a professional image for the NyayAI welcome screen and asked for a production-readiness checklist from a backend/infra perspective. (Completed/Superseded by Msg 552).
+3.  **Msg 516**: Requested branding updates on the Login screen (two-tone text, styled buttons) and a search bar theme fix on the Cases screen. (Completed).
+4.  **Msg 481**: Requested header styling fixes for Cases and Document Generator, using the Laws page as the source of truth. Also requested adding mandatory field markers (*) on the Join as Lawyer form. (Completed).
+5.  **Msg 450**: Requested header height refinements for Laws & Documents pages and a heading color consistency update for Cases. (Completed, but later corrected).
+6.  **Msg 429**: Reported that the Lawyer review CTA was not visible and the Join as Lawyer flow was not end-to-end, providing a new reference image. (Completed).
+7.  **Msg 410**: Pointed out a file-not-found error for  and instructed the agent to implement all remaining tasks at once. (Completed).
+8.  **Msg 403**: Stated that the created Verification in Progress page did not match the reference image and listed the 4 remaining functional updates. (Completed).
+9.  **Msg 378**: Provided a large list of 8 requirements, including re-adding a hamburger menu, implementing save/unsave toggles, fixing headers, and creating a new Join as Lawyer acknowledgement screen from an image. (Partially completed, then refined).
+10. **Msg 368**: Reported a syntax error in . (Completed).
 
 **Project Health Check:**
--   **Broken:** Mock authentication persistence during testing is unreliable, forcing workarounds.
--   **Mocked:** The entire backend, including all data (users, lawyers, cases, laws) and 3rd party services (Firebase, Razorpay), is mocked.
+- **Broken**: The core backend logic is non-existent. Payments, document generation, and user data persistence are all mocked on the frontend or not implemented. The app is not production-ready.
+- **Mocked**: Authentication, all API data (lawyers, cases, documents), payments, and PDF generation.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4:** Used for NyayAI chat (API calls are mocked in ). Uses the **Emergent LLM Key**.
--   **Firebase:** Intended for Auth and Firestore. Currently mocked. Requires user-provided credentials for live integration.
--   **Razorpay:** Intended for payments. Currently mocked. Requires user-provided TEST keys for live integration.
+- **MongoDB**: Currently used for mock data via . **(To be replaced)**.
+- **Firebase**: Planned for production use for **Auth**, **Firestore** (database), and **Storage** (file uploads). Not yet integrated.
+- **Razorpay**: Planned for production payments. Not yet integrated.
+- **LLM Provider (e.g., OpenAI, Gemini)**: Implied for the NyayAI feature. The specific provider and key management are not yet implemented. Emergent LLM Key is a potential option as per the system prompt.
 
 **Testing status**
--   Testing agent used after significant changes: NO
--   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None.
--   Known regressions: None.
+- **Testing agent used after significant changes**: NO
+- **Troubleshoot agent used after agent stuck in loop**: NO
+- **Test files created**: None.
+- **Known regressions**: None currently, but the project has a history of syntax/navigation errors being introduced during development.
 
 **Credentials to test flow:**
--   No credentials are required. The authentication flow is mocked and can be bypassed for development and testing.
+N/A. Auth is mocked. A Continue as Guest option is available.
 
 **What agent forgot to execute**
-- The agent has been diligent in following the user's shifting priorities. The key challenge has been keeping up with the user's detailed and evolving vision. The initial failure to grasp the user's expectation for end-to-end flows instead of just polished screens was the main learning point, which has since been corrected.
-
+The agent consistently required multiple prompts from the user to fully implement features as per the design (e.g., the Join as Lawyer verification screen, the visibility of the Lawyer Review CTA). More broadly, the agent did not proactively address the mock nature of the application; the user had to explicitly provide a detailed checklist to initiate the work of making the app production-ready.
 </analysis>
