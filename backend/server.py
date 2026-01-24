@@ -1472,6 +1472,265 @@ async def get_lawyer_profile(lawyer_id: str):
     else:
         raise HTTPException(status_code=404, detail="Lawyer not found")
 
+
+# ============= LAWYER APPLICATION & VERIFICATION =============
+
+@app.post("/api/lawyers/apply")
+async def apply_as_lawyer(
+    application: LawyerApplication,
+    user = Depends(require_auth)
+):
+    """
+    Apply to become a verified lawyer.
+    SECURITY: 
+    - ownerUserId is set from authenticated user (cannot be spoofed)
+    - verified is ALWAYS false on creation (only admin can set true)
+    - User can only create their own application
+    """
+    user_id = user["uid"]
+    
+    # Check if user already has an application
+    existing = db.collection("lawyer_applications").where("owner_user_id", "==", user_id).stream()
+    for app in existing:
+        raise HTTPException(
+            status_code=400, 
+            detail="You already have a pending or approved application"
+        )
+    
+    # Create application with enforced ownership
+    app_id = str(uuid.uuid4())[:8]
+    application_data = application.dict()
+    application_data.update({
+        "id": app_id,
+        "owner_user_id": user_id,  # SECURITY: Set from auth, not from input
+        "verified": False,  # SECURITY: Always false on creation
+        "verification_status": "pending",
+        "created_at": datetime.now().isoformat(),
+        "updated_at": datetime.now().isoformat(),
+        "verification_docs": [],  # Will be populated when docs are uploaded
+        "admin_notes": None,
+        "rejected_reason": None
+    })
+    
+    db.collection("lawyer_applications").document(app_id).set(application_data)
+    
+    return {
+        "success": True,
+        "application_id": app_id,
+        "message": "Application submitted. Please upload verification documents.",
+        "next_step": f"POST /api/lawyers/applications/{app_id}/upload-docs"
+    }
+
+
+@app.post("/api/lawyers/applications/{app_id}/upload-docs")
+async def upload_verification_docs(
+    app_id: str,
+    user = Depends(require_auth)
+):
+    """
+    Upload verification documents for lawyer application.
+    SECURITY:
+    - Only application owner can upload
+    - Docs stored at lawyer_docs/{userId}/{appId}/{filename}
+    - No cross-user access
+    """
+    user_id = user["uid"]
+    
+    # Get application and verify ownership
+    app_doc = db.collection("lawyer_applications").document(app_id).get()
+    if not app_doc.exists:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    app_data = app_doc.to_dict()
+    
+    # SECURITY: Verify ownerUserId == request.auth.uid
+    if app_data.get("owner_user_id") != user_id:
+        raise HTTPException(
+            status_code=403, 
+            detail="Access denied: You can only upload documents for your own application"
+        )
+    
+    # In a real implementation, this would handle file upload
+    # For mock, we simulate storing document reference
+    doc_path = f"lawyer_docs/{user_id}/{app_id}/verification_document.pdf"
+    
+    # Update application with doc reference
+    db.collection("lawyer_applications").document(app_id).update({
+        "verification_docs": ArrayUnion([{
+            "path": doc_path,
+            "uploaded_at": datetime.now().isoformat()
+        }]),
+        "verification_status": "documents_uploaded",
+        "updated_at": datetime.now().isoformat()
+    })
+    
+    return {
+        "success": True,
+        "message": "Documents uploaded successfully. Your application is under review.",
+        "storage_path": doc_path
+    }
+
+
+@app.get("/api/lawyers/my-application")
+async def get_my_lawyer_application(user = Depends(require_auth)):
+    """Get current user's lawyer application status"""
+    user_id = user["uid"]
+    
+    applications = db.collection("lawyer_applications").where("owner_user_id", "==", user_id).stream()
+    
+    for app in applications:
+        app_data = app.to_dict()
+        # Don't expose admin notes to users
+        app_data.pop("admin_notes", None)
+        return {"success": True, "application": app_data}
+    
+    return {"success": False, "message": "No application found"}
+
+
+# ============= ADMIN-ONLY LAWYER VERIFICATION =============
+
+@app.get("/api/admin/lawyer-applications")
+async def admin_list_applications(
+    status: Optional[str] = None,
+    admin = Depends(require_admin)
+):
+    """
+    ADMIN ONLY: List all lawyer applications.
+    """
+    applications = db.collection("lawyer_applications").stream()
+    
+    app_list = []
+    for app in applications:
+        app_data = app.to_dict()
+        if status and app_data.get("verification_status") != status:
+            continue
+        app_list.append(app_data)
+    
+    return {"success": True, "applications": app_list, "count": len(app_list)}
+
+
+@app.get("/api/admin/lawyer-applications/{app_id}/docs")
+async def admin_view_application_docs(
+    app_id: str,
+    admin = Depends(require_admin)
+):
+    """
+    ADMIN ONLY: View lawyer verification documents.
+    Admin can access any lawyer's documents for verification.
+    """
+    app_doc = db.collection("lawyer_applications").document(app_id).get()
+    if not app_doc.exists:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    app_data = app_doc.to_dict()
+    owner_uid = app_data.get("owner_user_id")
+    
+    # Admin can access verification docs
+    doc_paths = app_data.get("verification_docs", [])
+    
+    # Generate signed URLs for admin to view docs
+    signed_urls = []
+    for doc in doc_paths:
+        try:
+            url = storage.generate_signed_url(
+                path=doc["path"],
+                requester_uid=owner_uid,
+                is_admin=True,
+                expires_in_minutes=30
+            )
+            signed_urls.append({"path": doc["path"], "download_url": url})
+        except Exception as e:
+            signed_urls.append({"path": doc["path"], "error": str(e)})
+    
+    return {
+        "success": True,
+        "application": app_data,
+        "document_urls": signed_urls
+    }
+
+
+@app.post("/api/admin/lawyer-applications/{app_id}/verify")
+async def admin_verify_lawyer(
+    app_id: str,
+    action: Dict[str, Any] = Body(...),
+    admin = Depends(require_admin)
+):
+    """
+    ADMIN ONLY: Verify or reject lawyer application.
+    SECURITY: Only admin can set verified=true. Users cannot self-verify.
+    
+    Body: {"approved": true/false, "notes": "optional admin notes", "reject_reason": "if rejected"}
+    """
+    app_doc = db.collection("lawyer_applications").document(app_id).get()
+    if not app_doc.exists:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    app_data = app_doc.to_dict()
+    approved = action.get("approved", False)
+    admin_notes = action.get("notes", "")
+    reject_reason = action.get("reject_reason", "")
+    
+    if approved:
+        # Create verified lawyer profile
+        lawyer_id = f"lawyer_{app_id}"
+        lawyer_data = {
+            "id": lawyer_id,
+            "owner_user_id": app_data["owner_user_id"],  # Keep ownership
+            "name": app_data["name"],
+            "bar_council_id": app_data["bar_council_id"],
+            "specialization": app_data["specialization"],
+            "languages": app_data["languages"],
+            "city": app_data["city"],
+            "state": app_data["state"],
+            "experience": app_data["experience"],
+            "price": app_data["price"],
+            "bio": app_data["bio"],
+            "phone": app_data["phone"],
+            "email": app_data["email"],
+            "verified": True,  # ADMIN SETS THIS
+            "verified_at": datetime.now().isoformat(),
+            "verified_by": admin["uid"],
+            "rating": 0,
+            "reviews": 0,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        db.collection("lawyers").document(lawyer_id).set(lawyer_data)
+        
+        # Update application status
+        db.collection("lawyer_applications").document(app_id).update({
+            "verification_status": "approved",
+            "verified": True,
+            "admin_notes": admin_notes,
+            "verified_at": datetime.now().isoformat(),
+            "verified_by": admin["uid"],
+            "lawyer_profile_id": lawyer_id,
+            "updated_at": datetime.now().isoformat()
+        })
+        
+        return {
+            "success": True,
+            "message": "Lawyer verified and profile created",
+            "lawyer_id": lawyer_id
+        }
+    else:
+        # Reject application
+        db.collection("lawyer_applications").document(app_id).update({
+            "verification_status": "rejected",
+            "verified": False,
+            "admin_notes": admin_notes,
+            "rejected_reason": reject_reason,
+            "rejected_at": datetime.now().isoformat(),
+            "rejected_by": admin["uid"],
+            "updated_at": datetime.now().isoformat()
+        })
+        
+        return {
+            "success": True,
+            "message": "Application rejected",
+            "reason": reject_reason
+        }
+
 # ============= BOOKING & PAYMENT ENDPOINTS =============
 
 @app.post("/api/bookings/create")
