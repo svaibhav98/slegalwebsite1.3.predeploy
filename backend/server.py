@@ -1,831 +1,63 @@
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 import os
+import io
+import hmac
+import hashlib
+import uuid
 from dotenv import load_dotenv
-import firebase_admin
-from firebase_admin import credentials, auth, firestore
-import razorpay
+
+# Rate limiting
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# PDF Generation
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch, cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+
+# LLM Integration
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Load environment variables
 load_dotenv()
 
-# Initialize Firebase Admin (simplified config for MVP)
-# For production, use service account JSON file
-FIREBASE_ENABLED = False
-try:
-    # Check if already initialized
-    firebase_admin.get_app()
-    FIREBASE_ENABLED = True
-except ValueError:
-    # Try to initialize if credentials are available
-    try:
-        # For now, use a mock initialization for development
-        # In production, replace with actual service account JSON
-        # firebase_admin.initialize_app(credentials.Certificate('path/to/serviceAccount.json'))
-        
-        # For MVP, we'll skip Firebase Admin initialization
-        # Auth will be handled on frontend only
-        print("⚠️  Firebase Admin not initialized - using mock mode for MVP")
-        print("   To enable Firebase: Provide service account JSON and uncomment initialization")
-        FIREBASE_ENABLED = False
-    except Exception as e:
-        print(f"⚠️  Firebase initialization skipped: {e}")
-        FIREBASE_ENABLED = False
+# ============= RATE LIMITER SETUP =============
+limiter = Limiter(key_func=get_remote_address)
 
-# Initialize Firestore (only if Firebase is enabled)
-db = None
-if FIREBASE_ENABLED:
-    try:
-        db = firestore.client()
-        print("✅ Firestore connected successfully")
-    except Exception as e:
-        print(f"⚠️  Firestore connection failed: {e}")
-else:
-    print("⚠️  Running in mock mode - Firestore not available")
+# ============= MOCK DATABASE (Firestore Simulation) =============
+# This simulates Firestore behavior for MVP
+# In production, replace with actual Firebase Admin SDK
 
-# In-memory mock database for MVP
-mock_db = {
-    "users": [],
-    "lawyers": [],
-    "chats": [],
-    "documents": [],
-    "bookings": [],
-    "cases": [],
-    "laws": []
-}
-
-# Initialize Razorpay
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_demo")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "demo_secret")
-razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
-# Initialize FastAPI
-app = FastAPI(title="SunoLegal API", version="1.0.0")
-
-# CORS Configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ============= AUTHENTICATION DEPENDENCY =============
-
-async def verify_firebase_token(authorization: str = Header(None)):
-    """Verify Firebase ID token from Authorization header"""
-    if not FIREBASE_ENABLED:
-        # Mock authentication for development
-        return {"uid": "mock_user_123", "email": "test@example.com"}
+class MockFirestoreDB:
+    """
+    Mock Firestore database for development/testing.
+    Provides same interface as Firestore for easy migration.
+    When you have real Firebase credentials, simply swap this out.
+    """
+    def __init__(self):
+        self._data = {
+            "users": {},
+            "lawyers": {},
+            "chats": {},
+            "documents": {},
+            "bookings": {},
+            "cases": {},
+            "laws": {},
+            "payments": {},  # For tracking webhook idempotency
+        }
+        self._seed_initial_data()
     
-    if not authorization:
-        raise HTTPException(status_code=401, detail="No authorization token provided")
-    
-    try:
-        # Extract token from "Bearer <token>" format
-        token = authorization.split("Bearer ")[-1] if "Bearer" in authorization else authorization
-        
-        # Verify token
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
-
-# ============= PYDANTIC MODELS =============
-
-class UserProfile(BaseModel):
-    name: str
-    phone: str
-    email: Optional[str] = None
-    city: str
-    state: str
-    language: str = "en"
-    role: str = "user"  # user, lawyer, admin
-
-class ChatMessage(BaseModel):
-    message: str
-    session_id: Optional[str] = None
-
-class DocumentData(BaseModel):
-    document_type: str  # rent_agreement, legal_notice, affidavit
-    data: Dict[str, Any]
-
-class LawyerProfile(BaseModel):
-    name: str
-    bar_council_id: str
-    specialization: List[str]
-    languages: List[str]
-    city: str
-    state: str
-    experience: int
-    price: int  # per 30 min consultation
-    bio: Optional[str] = None
-
-class BookingRequest(BaseModel):
-    lawyer_id: str
-    consultation_type: str  # chat, call, video
-    date: str
-    time_slot: str
-    duration: int = 30  # minutes
-
-class CaseData(BaseModel):
-    title: str
-    description: str
-    court: Optional[str] = None
-    case_number: Optional[str] = None
-    hearing_date: Optional[str] = None
-    status: str = "active"
-
-# ============= HEALTH CHECK =============
-
-@app.get("/api/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "service": "SunoLegal API",
-        "version": "1.0.0",
-        "firebase": "connected",
-        "timestamp": datetime.now().isoformat()
-    }
-
-# ============= USER PROFILE ENDPOINTS =============
-
-@app.post("/api/users/profile")
-async def create_or_update_profile(
-    profile: UserProfile,
-    user = Depends(verify_firebase_token)
-):
-    """Create or update user profile in Firestore"""
-    try:
-        user_id = user["uid"]
-        
-        profile_data = profile.dict()
-        profile_data["uid"] = user_id
-        profile_data["created_at"] = firestore.SERVER_TIMESTAMP
-        profile_data["updated_at"] = firestore.SERVER_TIMESTAMP
-        
-        # Save to Firestore
-        db.collection("users").document(user_id).set(profile_data, merge=True)
-        
-        return {
-            "success": True,
-            "message": "Profile saved successfully",
-            "user_id": user_id
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/users/profile")
-async def get_profile(user = Depends(verify_firebase_token)):
-    """Get user profile from Firestore"""
-    try:
-        user_id = user["uid"]
-        doc = db.collection("users").document(user_id).get()
-        
-        if doc.exists:
-            return {
-                "success": True,
-                "profile": doc.to_dict()
-            }
-        else:
-            return {
-                "success": False,
-                "message": "Profile not found"
-            }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= NYAYAI CHAT ENDPOINTS =============
-
-LEGAL_SYSTEM_PROMPT = """You are NyayAI, a helpful legal information assistant for India. 
-
-IMPORTANT GUIDELINES:
-1. You provide GENERAL LEGAL INFORMATION only, NOT legal advice
-2. Always remind users that this is informational and they should consult a licensed lawyer for specific advice
-3. Use simple, easy-to-understand language (avoid complex legal jargon)
-4. Focus on Indian laws and procedures
-5. Be empathetic and supportive - legal issues can be stressful
-6. Provide actionable next steps when relevant
-7. If asked about a topic outside your knowledge, be honest and suggest consulting a lawyer
-
-KEY AREAS:
-- Tenant rights and rent agreements
-- Consumer protection
-- Family law basics
-- Police procedures and FIRs
-- RTI (Right to Information)
-- Government schemes
-- Property disputes
-- Employment law
-
-Always end responses with: "For personalized legal advice, please consult a verified lawyer on our platform."
-"""
-
-@app.post("/api/chat/nyayai")
-async def chat_with_nyayai(
-    message: ChatMessage,
-    user = Depends(verify_firebase_token)
-):
-    """Chat with NyayAI legal assistant"""
-    try:
-        user_id = user["uid"]
-        session_id = message.session_id or f"{user_id}_{datetime.now().timestamp()}"
-        
-        # Initialize LlmChat with OpenAI
-        chat = LlmChat(
-            api_key=os.getenv("EMERGENT_LLM_KEY"),
-            session_id=session_id,
-            system_message=LEGAL_SYSTEM_PROMPT
-        )
-        chat.with_model("openai", "gpt-5.2")
-        
-        # Send message to AI
-        user_message = UserMessage(text=message.message)
-        response = await chat.send_message(user_message)
-        
-        # Save to Firestore
-        chat_ref = db.collection("chats").document(session_id)
-        chat_data = chat_ref.get()
-        
-        if chat_data.exists:
-            # Append to existing chat
-            chat_ref.update({
-                "messages": firestore.ArrayUnion([
-                    {
-                        "role": "user",
-                        "content": message.message,
-                        "timestamp": datetime.now().isoformat()
-                    },
-                    {
-                        "role": "assistant",
-                        "content": response,
-                        "timestamp": datetime.now().isoformat()
-                    }
-                ]),
-                "updated_at": firestore.SERVER_TIMESTAMP
-            })
-        else:
-            # Create new chat
-            chat_ref.set({
-                "user_id": user_id,
-                "session_id": session_id,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": message.message,
-                        "timestamp": datetime.now().isoformat()
-                    },
-                    {
-                        "role": "assistant",
-                        "content": response,
-                        "timestamp": datetime.now().isoformat()
-                    }
-                ],
-                "created_at": firestore.SERVER_TIMESTAMP,
-                "updated_at": firestore.SERVER_TIMESTAMP
-            })
-        
-        return {
-            "success": True,
-            "response": response,
-            "session_id": session_id
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/chat/history/{session_id}")
-async def get_chat_history(
-    session_id: str,
-    user = Depends(verify_firebase_token)
-):
-    """Get chat history for a session"""
-    try:
-        user_id = user["uid"]
-        
-        # Get chat from Firestore
-        doc = db.collection("chats").document(session_id).get()
-        
-        if doc.exists:
-            chat_data = doc.to_dict()
-            # Verify ownership
-            if chat_data.get("user_id") != user_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            
-            return {
-                "success": True,
-                "chat": chat_data
-            }
-        else:
-            return {
-                "success": False,
-                "message": "Chat not found"
-            }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/chat/user-chats")
-async def get_user_chats(user = Depends(verify_firebase_token)):
-    """Get all chats for logged-in user"""
-    try:
-        user_id = user["uid"]
-        
-        # Query Firestore
-        chats = db.collection("chats").where("user_id", "==", user_id).order_by("updated_at", direction=firestore.Query.DESCENDING).limit(20).stream()
-        
-        chat_list = []
-        for chat in chats:
-            chat_data = chat.to_dict()
-            # Get last message for preview
-            messages = chat_data.get("messages", [])
-            last_message = messages[-1] if messages else None
-            
-            chat_list.append({
-                "session_id": chat_data.get("session_id"),
-                "last_message": last_message.get("content") if last_message else None,
-                "updated_at": chat_data.get("updated_at"),
-                "message_count": len(messages)
-            })
-        
-        return {
-            "success": True,
-            "chats": chat_list
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= DOCUMENT GENERATOR ENDPOINTS =============
-
-@app.post("/api/documents/generate")
-async def generate_document(
-    doc_data: DocumentData,
-    user = Depends(verify_firebase_token)
-):
-    """Generate legal document (simplified for MVP)"""
-    try:
-        user_id = user["uid"]
-        
-        # In a real implementation, you would:
-        # 1. Use a template engine to fill the document
-        # 2. Generate PDF using a library like ReportLab or WeasyPrint
-        # 3. Upload to Firebase Storage
-        # For MVP, we'll just store the data
-        
-        document = {
-            "user_id": user_id,
-            "type": doc_data.document_type,
-            "data": doc_data.data,
-            "created_at": firestore.SERVER_TIMESTAMP,
-            "pdf_url": None  # Would contain Firebase Storage URL in production
-        }
-        
-        # Save to Firestore
-        doc_ref = db.collection("documents").add(document)
-        
-        return {
-            "success": True,
-            "message": "Document generated successfully",
-            "document_id": doc_ref[1].id
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/documents/list")
-async def list_documents(user = Depends(verify_firebase_token)):
-    """List all documents for user"""
-    try:
-        user_id = user["uid"]
-        
-        # Query Firestore
-        docs = db.collection("documents").where("user_id", "==", user_id).order_by("created_at", direction=firestore.Query.DESCENDING).stream()
-        
-        doc_list = []
-        for doc in docs:
-            doc_data = doc.to_dict()
-            doc_data["id"] = doc.id
-            doc_list.append(doc_data)
-        
-        return {
-            "success": True,
-            "documents": doc_list
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= LAWYER MARKETPLACE ENDPOINTS =============
-
-@app.get("/api/lawyers/list")
-async def list_lawyers(
-    city: Optional[str] = None,
-    specialization: Optional[str] = None,
-    language: Optional[str] = None,
-    min_price: Optional[int] = None,
-    max_price: Optional[int] = None
-):
-    """List lawyers with optional filters"""
-    try:
-        if not FIREBASE_ENABLED or not db:
-            # Use mock database
-            lawyer_list = mock_db["lawyers"].copy()
-            
-            # Apply filters
-            if city:
-                lawyer_list = [l for l in lawyer_list if l.get("city") == city]
-            if specialization:
-                lawyer_list = [l for l in lawyer_list if specialization in l.get("specialization", [])]
-            if language:
-                lawyer_list = [l for l in lawyer_list if language in l.get("languages", [])]
-            if min_price:
-                lawyer_list = [l for l in lawyer_list if l.get("price", 0) >= min_price]
-            if max_price:
-                lawyer_list = [l for l in lawyer_list if l.get("price", 0) <= max_price]
-            
-            return {
-                "success": True,
-                "lawyers": lawyer_list,
-                "count": len(lawyer_list)
-            }
-        
-        # Start with base query
-        query = db.collection("lawyers")
-        
-        # Apply filters
-        if city:
-            query = query.where("city", "==", city)
-        if specialization:
-            query = query.where("specialization", "array_contains", specialization)
-        if language:
-            query = query.where("languages", "array_contains", language)
-        
-        # Get results
-        lawyers = query.stream()
-        
-        lawyer_list = []
-        for lawyer in lawyers:
-            lawyer_data = lawyer.to_dict()
-            lawyer_data["id"] = lawyer.id
-            
-            # Apply price filter (Firestore doesn't support range queries with other filters)
-            if min_price and lawyer_data.get("price", 0) < min_price:
-                continue
-            if max_price and lawyer_data.get("price", 0) > max_price:
-                continue
-            
-            lawyer_list.append(lawyer_data)
-        
-        return {
-            "success": True,
-            "lawyers": lawyer_list,
-            "count": len(lawyer_list)
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/lawyers/{lawyer_id}")
-async def get_lawyer_profile(lawyer_id: str):
-    """Get lawyer profile by ID"""
-    try:
-        doc = db.collection("lawyers").document(lawyer_id).get()
-        
-        if doc.exists:
-            lawyer_data = doc.to_dict()
-            lawyer_data["id"] = doc.id
-            return {
-                "success": True,
-                "lawyer": lawyer_data
-            }
-        else:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= BOOKING & PAYMENT ENDPOINTS =============
-
-@app.post("/api/bookings/create")
-async def create_booking(
-    booking: BookingRequest,
-    user = Depends(verify_firebase_token)
-):
-    """Create a booking and Razorpay order"""
-    try:
-        user_id = user["uid"]
-        
-        # Get lawyer details for pricing
-        lawyer_doc = db.collection("lawyers").document(booking.lawyer_id).get()
-        if not lawyer_doc.exists:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
-        
-        lawyer_data = lawyer_doc.to_dict()
-        
-        # Calculate amount (price per 30 min)
-        price_per_30_min = lawyer_data.get("price", 500)
-        amount = price_per_30_min * (booking.duration // 30)
-        
-        # Create Razorpay order
-        order_data = {
-            "amount": amount * 100,  # Convert to paise
-            "currency": "INR",
-            "payment_capture": 1,
-            "notes": {
-                "user_id": user_id,
-                "lawyer_id": booking.lawyer_id,
-                "consultation_type": booking.consultation_type
-            }
-        }
-        
-        razorpay_order = razorpay_client.order.create(data=order_data)
-        
-        # Save booking to Firestore
-        booking_data = {
-            "user_id": user_id,
-            "lawyer_id": booking.lawyer_id,
-            "consultation_type": booking.consultation_type,
-            "date": booking.date,
-            "time_slot": booking.time_slot,
-            "duration": booking.duration,
-            "amount": amount,
-            "status": "pending",
-            "razorpay_order_id": razorpay_order["id"],
-            "created_at": firestore.SERVER_TIMESTAMP
-        }
-        
-        booking_ref = db.collection("bookings").add(booking_data)
-        
-        return {
-            "success": True,
-            "booking_id": booking_ref[1].id,
-            "order_id": razorpay_order["id"],
-            "amount": amount,
-            "currency": "INR"
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/bookings/verify-payment")
-async def verify_payment(
-    payment_id: str,
-    order_id: str,
-    signature: str,
-    user = Depends(verify_firebase_token)
-):
-    """Verify Razorpay payment"""
-    try:
-        # Verify signature
-        params_dict = {
-            "razorpay_order_id": order_id,
-            "razorpay_payment_id": payment_id,
-            "razorpay_signature": signature
-        }
-        
-        razorpay_client.utility.verify_payment_signature(params_dict)
-        
-        # Update booking status
-        bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
-        
-        for booking in bookings:
-            db.collection("bookings").document(booking.id).update({
-                "status": "confirmed",
-                "razorpay_payment_id": payment_id,
-                "payment_verified_at": firestore.SERVER_TIMESTAMP
-            })
-        
-        return {
-            "success": True,
-            "message": "Payment verified and booking confirmed"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Payment verification failed: {str(e)}")
-
-@app.get("/api/bookings/list")
-async def list_bookings(user = Depends(verify_firebase_token)):
-    """List all bookings for user"""
-    try:
-        user_id = user["uid"]
-        
-        bookings = db.collection("bookings").where("user_id", "==", user_id).order_by("created_at", direction=firestore.Query.DESCENDING).stream()
-        
-        booking_list = []
-        for booking in bookings:
-            booking_data = booking.to_dict()
-            booking_data["id"] = booking.id
-            booking_list.append(booking_data)
-        
-        return {
-            "success": True,
-            "bookings": booking_list
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= CASE TRACKING ENDPOINTS =============
-
-@app.post("/api/cases/create")
-async def create_case(
-    case: CaseData,
-    user = Depends(verify_firebase_token)
-):
-    """Create a new case"""
-    try:
-        user_id = user["uid"]
-        
-        case_data = case.dict()
-        case_data["user_id"] = user_id
-        case_data["notes"] = []
-        case_data["documents"] = []
-        case_data["created_at"] = firestore.SERVER_TIMESTAMP
-        case_data["updated_at"] = firestore.SERVER_TIMESTAMP
-        
-        case_ref = db.collection("cases").add(case_data)
-        
-        return {
-            "success": True,
-            "case_id": case_ref[1].id,
-            "message": "Case created successfully"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/cases/list")
-async def list_cases(user = Depends(verify_firebase_token)):
-    """List all cases for user"""
-    try:
-        user_id = user["uid"]
-        
-        cases = db.collection("cases").where("user_id", "==", user_id).order_by("updated_at", direction=firestore.Query.DESCENDING).stream()
-        
-        case_list = []
-        for case in cases:
-            case_data = case.to_dict()
-            case_data["id"] = case.id
-            case_list.append(case_data)
-        
-        return {
-            "success": True,
-            "cases": case_list
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/cases/{case_id}")
-async def get_case(
-    case_id: str,
-    user = Depends(verify_firebase_token)
-):
-    """Get case details"""
-    try:
-        user_id = user["uid"]
-        
-        doc = db.collection("cases").document(case_id).get()
-        
-        if doc.exists:
-            case_data = doc.to_dict()
-            # Verify ownership
-            if case_data.get("user_id") != user_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            
-            case_data["id"] = doc.id
-            return {
-                "success": True,
-                "case": case_data
-            }
-        else:
-            raise HTTPException(status_code=404, detail="Case not found")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.put("/api/cases/{case_id}/notes")
-async def add_case_note(
-    case_id: str,
-    note: Dict[str, str],
-    user = Depends(verify_firebase_token)
-):
-    """Add note to case"""
-    try:
-        user_id = user["uid"]
-        
-        # Verify ownership
-        doc = db.collection("cases").document(case_id).get()
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Case not found")
-        
-        case_data = doc.to_dict()
-        if case_data.get("user_id") != user_id:
-            raise HTTPException(status_code=403, detail="Access denied")
-        
-        # Add note
-        note_with_timestamp = {
-            "content": note.get("content", ""),
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        db.collection("cases").document(case_id).update({
-            "notes": firestore.ArrayUnion([note_with_timestamp]),
-            "updated_at": firestore.SERVER_TIMESTAMP
-        })
-        
-        return {
-            "success": True,
-            "message": "Note added successfully"
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= LAWS & SCHEMES ENDPOINTS =============
-
-@app.get("/api/laws/list")
-async def list_laws(
-    category: Optional[str] = None,
-    state: Optional[str] = None,
-    search: Optional[str] = None
-):
-    """List laws and schemes with filters"""
-    try:
-        if not FIREBASE_ENABLED or not db:
-            # Use mock database
-            law_list = mock_db["laws"].copy()
-            
-            # Apply filters
-            if category:
-                law_list = [l for l in law_list if l.get("category") == category]
-            if state:
-                law_list = [l for l in law_list if l.get("state") == state]
-            if search:
-                law_list = [l for l in law_list if search.lower() in l.get("title", "").lower()]
-            
-            return {
-                "success": True,
-                "laws": law_list,
-                "count": len(law_list)
-            }
-        
-        query = db.collection("laws")
-        
-        if category:
-            query = query.where("category", "==", category)
-        if state:
-            query = query.where("state", "==", state)
-        
-        laws = query.stream()
-        
-        law_list = []
-        for law in laws:
-            law_data = law.to_dict()
-            law_data["id"] = law.id
-            
-            # Simple search filter
-            if search and search.lower() not in law_data.get("title", "").lower():
-                continue
-            
-            law_list.append(law_data)
-        
-        return {
-            "success": True,
-            "laws": law_list,
-            "count": len(law_list)
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/laws/{law_id}")
-async def get_law(law_id: str):
-    """Get law details"""
-    try:
-        doc = db.collection("laws").document(law_id).get()
-        
-        if doc.exists:
-            law_data = doc.to_dict()
-            law_data["id"] = doc.id
-            return {
-                "success": True,
-                "law": law_data
-            }
-        else:
-            raise HTTPException(status_code=404, detail="Law not found")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============= SEED DATA ENDPOINT (FOR DEVELOPMENT) =============
-
-@app.post("/api/seed-data")
-async def seed_sample_data():
-    """Seed database with sample lawyers and laws (for MVP testing)"""
-    try:
+    def _seed_initial_data(self):
+        """Seed with sample data on startup"""
         # Sample lawyers
         sample_lawyers = [
             {
@@ -840,7 +72,8 @@ async def seed_sample_data():
                 "rating": 4.9,
                 "reviews": 210,
                 "bio": "Experienced family law attorney specializing in divorce and custody cases.",
-                "verified": True
+                "verified": True,
+                "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400"
             },
             {
                 "name": "Adv. Vinayak Verma",
@@ -854,7 +87,8 @@ async def seed_sample_data():
                 "rating": 4.8,
                 "reviews": 180,
                 "bio": "Corporate law expert with focus on business contracts and compliance.",
-                "verified": True
+                "verified": True,
+                "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400"
             },
             {
                 "name": "Adv. Anil Kapoor",
@@ -868,7 +102,8 @@ async def seed_sample_data():
                 "rating": 4.6,
                 "reviews": 95,
                 "bio": "Property law specialist with extensive experience in civil litigation.",
-                "verified": True
+                "verified": True,
+                "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400"
             },
             {
                 "name": "Adv. Priya Menon",
@@ -882,18 +117,16 @@ async def seed_sample_data():
                 "rating": 4.7,
                 "reviews": 150,
                 "bio": "Criminal defense lawyer committed to protecting client rights.",
-                "verified": True
+                "verified": True,
+                "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400"
             }
         ]
         
-        if FIREBASE_ENABLED and db:
-            for lawyer in sample_lawyers:
-                db.collection("lawyers").add(lawyer)
-        else:
-            # Add to mock database
-            for lawyer in sample_lawyers:
-                lawyer["id"] = f"lawyer_{len(mock_db['lawyers'])}"
-                mock_db["lawyers"].append(lawyer)
+        for i, lawyer in enumerate(sample_lawyers):
+            lawyer_id = f"lawyer_{i+1}"
+            lawyer["id"] = lawyer_id
+            lawyer["created_at"] = datetime.now().isoformat()
+            self._data["lawyers"][lawyer_id] = lawyer
         
         # Sample laws
         sample_laws = [
@@ -962,22 +195,1160 @@ async def seed_sample_data():
             }
         ]
         
-        if FIREBASE_ENABLED and db:
-            for law in sample_laws:
-                db.collection("laws").add(law)
+        for i, law in enumerate(sample_laws):
+            law_id = f"law_{i+1}"
+            law["id"] = law_id
+            law["created_at"] = datetime.now().isoformat()
+            self._data["laws"][law_id] = law
+        
+        print(f"✅ Mock DB seeded: {len(sample_lawyers)} lawyers, {len(sample_laws)} laws")
+    
+    def collection(self, name: str):
+        """Get a collection reference"""
+        return MockCollection(self._data, name)
+
+
+class MockCollection:
+    """Mock Firestore Collection"""
+    def __init__(self, data: dict, name: str):
+        self._data = data
+        self._name = name
+        if name not in self._data:
+            self._data[name] = {}
+    
+    def document(self, doc_id: str):
+        """Get document reference"""
+        return MockDocumentRef(self._data, self._name, doc_id)
+    
+    def add(self, data: dict):
+        """Add new document with auto-generated ID"""
+        doc_id = str(uuid.uuid4())[:8]
+        data["id"] = doc_id
+        data["created_at"] = datetime.now().isoformat()
+        self._data[self._name][doc_id] = data
+        return (None, MockDocumentRef(self._data, self._name, doc_id))
+    
+    def where(self, field: str, op: str, value: Any):
+        """Query documents"""
+        return MockQuery(self._data, self._name, [(field, op, value)])
+    
+    def stream(self):
+        """Get all documents in collection"""
+        return [MockDocumentSnapshot(doc_id, data) 
+                for doc_id, data in self._data[self._name].items()]
+
+
+class MockQuery:
+    """Mock Firestore Query"""
+    def __init__(self, data: dict, collection: str, filters: list):
+        self._data = data
+        self._collection = collection
+        self._filters = filters
+        self._order_by_field = None
+        self._order_direction = "ASCENDING"
+        self._limit_count = None
+    
+    def where(self, field: str, op: str, value: Any):
+        """Add filter"""
+        self._filters.append((field, op, value))
+        return self
+    
+    def order_by(self, field: str, direction=None):
+        """Order results"""
+        self._order_by_field = field
+        if direction:
+            self._order_direction = direction
+        return self
+    
+    def limit(self, count: int):
+        """Limit results"""
+        self._limit_count = count
+        return self
+    
+    def stream(self):
+        """Execute query and return results"""
+        results = []
+        for doc_id, doc_data in self._data[self._collection].items():
+            match = True
+            for field, op, value in self._filters:
+                doc_value = doc_data.get(field)
+                if op == "==":
+                    if doc_value != value:
+                        match = False
+                elif op == "array_contains":
+                    if not isinstance(doc_value, list) or value not in doc_value:
+                        match = False
+            if match:
+                results.append(MockDocumentSnapshot(doc_id, doc_data))
+        
+        # Apply ordering
+        if self._order_by_field:
+            reverse = self._order_direction == "DESCENDING"
+            results.sort(key=lambda x: x.to_dict().get(self._order_by_field, ""), reverse=reverse)
+        
+        # Apply limit
+        if self._limit_count:
+            results = results[:self._limit_count]
+        
+        return results
+
+
+class MockDocumentRef:
+    """Mock Firestore Document Reference"""
+    def __init__(self, data: dict, collection: str, doc_id: str):
+        self._data = data
+        self._collection = collection
+        self._doc_id = doc_id
+    
+    @property
+    def id(self):
+        return self._doc_id
+    
+    def get(self):
+        """Get document snapshot"""
+        doc_data = self._data[self._collection].get(self._doc_id)
+        return MockDocumentSnapshot(self._doc_id, doc_data)
+    
+    def set(self, data: dict, merge: bool = False):
+        """Set document data"""
+        if merge and self._doc_id in self._data[self._collection]:
+            self._data[self._collection][self._doc_id].update(data)
         else:
-            # Add to mock database
-            for law in sample_laws:
-                law["id"] = f"law_{len(mock_db['laws'])}"
-                mock_db["laws"].append(law)
+            data["id"] = self._doc_id
+            self._data[self._collection][self._doc_id] = data
+    
+    def update(self, data: dict):
+        """Update document fields"""
+        if self._doc_id in self._data[self._collection]:
+            # Handle ArrayUnion
+            for key, value in data.items():
+                if isinstance(value, dict) and "_array_union" in value:
+                    existing = self._data[self._collection][self._doc_id].get(key, [])
+                    existing.extend(value["_array_union"])
+                    self._data[self._collection][self._doc_id][key] = existing
+                else:
+                    self._data[self._collection][self._doc_id][key] = value
+            self._data[self._collection][self._doc_id]["updated_at"] = datetime.now().isoformat()
+
+
+class MockDocumentSnapshot:
+    """Mock Firestore Document Snapshot"""
+    def __init__(self, doc_id: str, data: Optional[dict]):
+        self._doc_id = doc_id
+        self._data = data
+    
+    @property
+    def id(self):
+        return self._doc_id
+    
+    @property
+    def exists(self):
+        return self._data is not None
+    
+    def to_dict(self):
+        return self._data.copy() if self._data else None
+
+
+# Helper for ArrayUnion simulation
+def ArrayUnion(values: list):
+    return {"_array_union": values}
+
+
+# Initialize Mock Database
+db = MockFirestoreDB()
+print("🔶 Running in MOCK MODE - Using in-memory database")
+print("   To use real Firestore: Provide Firebase service account credentials")
+
+# ============= RAZORPAY SETUP =============
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_demo")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "demo_secret")
+
+# For webhook signature verification
+def verify_razorpay_signature(payload: bytes, signature: str) -> bool:
+    """Verify Razorpay webhook signature"""
+    expected_signature = hmac.new(
+        RAZORPAY_KEY_SECRET.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected_signature, signature)
+
+# Mock Razorpay client for development
+class MockRazorpayClient:
+    """Mock Razorpay client for development without real API keys"""
+    class Order:
+        def create(self, data: dict) -> dict:
+            return {
+                "id": f"order_{uuid.uuid4().hex[:12]}",
+                "amount": data["amount"],
+                "currency": data.get("currency", "INR"),
+                "status": "created",
+                "created_at": int(datetime.now().timestamp())
+            }
+    
+    class Utility:
+        def verify_payment_signature(self, params: dict) -> bool:
+            # In mock mode, always return success for testing
+            return True
+    
+    def __init__(self):
+        self.order = self.Order()
+        self.utility = self.Utility()
+
+# Use mock client (replace with real razorpay.Client when you have keys)
+razorpay_client = MockRazorpayClient()
+print("🔶 Razorpay running in MOCK MODE")
+
+# ============= INITIALIZE FASTAPI =============
+app = FastAPI(
+    title="SunoLegal API",
+    version="1.0.0",
+    description="Legal services platform API - Running in MOCK mode for development"
+)
+
+# Add rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ============= CORS CONFIGURATION =============
+# In production, replace with your actual domains
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS[0] != "*" else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ============= AUTHENTICATION =============
+
+async def verify_token(authorization: str = Header(None)):
+    """
+    Verify authentication token.
+    In MOCK mode: Returns a demo user for testing.
+    In production: Verify Firebase ID token.
+    """
+    # Mock authentication for development
+    if not authorization:
+        # Allow guest access with limited permissions
+        return {"uid": "guest_user", "email": None, "is_guest": True}
+    
+    # Extract token
+    token = authorization.split("Bearer ")[-1] if "Bearer" in authorization else authorization
+    
+    # In mock mode, decode simple token or accept any
+    if token.startswith("mock_"):
+        return {"uid": token, "email": f"{token}@example.com", "is_guest": False}
+    
+    # For any other token, return a mock authenticated user
+    return {"uid": f"user_{token[:8]}", "email": "test@example.com", "is_guest": False}
+
+
+async def require_auth(authorization: str = Header(None)):
+    """Require authenticated user (not guest)"""
+    user = await verify_token(authorization)
+    if user.get("is_guest"):
+        raise HTTPException(status_code=401, detail="Authentication required for this action")
+    return user
+
+# ============= PYDANTIC MODELS =============
+
+class UserProfile(BaseModel):
+    name: str
+    phone: str
+    email: Optional[str] = None
+    city: str
+    state: str
+    language: str = "en"
+    role: str = "user"
+
+class ChatMessage(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+class DocumentData(BaseModel):
+    document_type: str  # rent_agreement, legal_notice, affidavit, consumer_complaint
+    data: Dict[str, Any]
+
+class BookingRequest(BaseModel):
+    lawyer_id: str
+    consultation_type: str  # chat, call, video
+    date: str
+    time_slot: str
+    duration: int = 30
+
+class CaseData(BaseModel):
+    title: str
+    description: str
+    court: Optional[str] = None
+    case_number: Optional[str] = None
+    hearing_date: Optional[str] = None
+    status: str = "active"
+
+class PaymentVerification(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+# ============= HEALTH CHECK =============
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "healthy",
+        "service": "SunoLegal API",
+        "version": "1.0.0",
+        "mode": "MOCK",
+        "features": {
+            "database": "mock_firestore",
+            "payments": "mock_razorpay",
+            "llm": "emergent_integration",
+            "pdf_generation": "reportlab"
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============= USER PROFILE ENDPOINTS =============
+
+@app.post("/api/users/profile")
+async def create_or_update_profile(
+    profile: UserProfile,
+    user = Depends(require_auth)
+):
+    """Create or update user profile"""
+    user_id = user["uid"]
+    
+    profile_data = profile.dict()
+    profile_data["uid"] = user_id
+    profile_data["updated_at"] = datetime.now().isoformat()
+    
+    db.collection("users").document(user_id).set(profile_data, merge=True)
+    
+    return {
+        "success": True,
+        "message": "Profile saved successfully",
+        "user_id": user_id
+    }
+
+@app.get("/api/users/profile")
+async def get_profile(user = Depends(verify_token)):
+    """Get user profile"""
+    if user.get("is_guest"):
+        return {"success": False, "message": "Guest users don't have profiles"}
+    
+    user_id = user["uid"]
+    doc = db.collection("users").document(user_id).get()
+    
+    if doc.exists:
+        return {"success": True, "profile": doc.to_dict()}
+    else:
+        return {"success": False, "message": "Profile not found"}
+
+# ============= NYAYAI CHAT ENDPOINTS =============
+
+LEGAL_SYSTEM_PROMPT = """You are NyayAI, a helpful legal information assistant for India. 
+
+IMPORTANT GUIDELINES:
+1. You provide GENERAL LEGAL INFORMATION only, NOT legal advice
+2. Always remind users that this is informational and they should consult a licensed lawyer for specific advice
+3. Use simple, easy-to-understand language (avoid complex legal jargon)
+4. Focus on Indian laws and procedures
+5. Be empathetic and supportive - legal issues can be stressful
+6. Provide actionable next steps when relevant
+7. If asked about a topic outside your knowledge, be honest and suggest consulting a lawyer
+
+KEY AREAS:
+- Tenant rights and rent agreements
+- Consumer protection
+- Family law basics
+- Police procedures and FIRs
+- RTI (Right to Information)
+- Government schemes
+- Property disputes
+- Employment law
+
+Always end responses with: "For personalized legal advice, please consult a verified lawyer on our platform."
+"""
+
+@app.post("/api/chat/nyayai")
+@limiter.limit("20/minute")  # Rate limit: 20 requests per minute
+async def chat_with_nyayai(
+    request: Request,
+    message: ChatMessage,
+    user = Depends(verify_token)
+):
+    """Chat with NyayAI legal assistant"""
+    user_id = user["uid"]
+    session_id = message.session_id or f"{user_id}_{int(datetime.now().timestamp())}"
+    
+    try:
+        # Initialize LlmChat with Emergent Integration
+        chat = LlmChat(
+            api_key=os.getenv("EMERGENT_LLM_KEY"),
+            session_id=session_id,
+            system_message=LEGAL_SYSTEM_PROMPT
+        )
+        chat.with_model("openai", "gpt-4o-mini")
+        
+        # Send message to AI
+        user_message = UserMessage(text=message.message)
+        response = await chat.send_message(user_message)
+        
+        # Store chat in database
+        chat_ref = db.collection("chats").document(session_id)
+        chat_data = chat_ref.get()
+        
+        new_messages = [
+            {"role": "user", "content": message.message, "timestamp": datetime.now().isoformat()},
+            {"role": "assistant", "content": response, "timestamp": datetime.now().isoformat()}
+        ]
+        
+        if chat_data.exists:
+            chat_ref.update({
+                "messages": ArrayUnion(new_messages),
+                "updated_at": datetime.now().isoformat()
+            })
+        else:
+            chat_ref.set({
+                "user_id": user_id,
+                "session_id": session_id,
+                "messages": new_messages,
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
+            })
         
         return {
             "success": True,
-            "message": f"Added {len(sample_lawyers)} lawyers and {len(sample_laws)} laws to database",
-            "mode": "mock" if not FIREBASE_ENABLED else "firebase"
+            "response": response,
+            "session_id": session_id
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Fallback response if LLM fails
+        return {
+            "success": True,
+            "response": f"I apologize, but I'm having trouble connecting right now. Your question was: '{message.message}'. Please try again in a moment, or consult with a lawyer on our platform for immediate assistance.",
+            "session_id": session_id,
+            "error": str(e)
+        }
+
+@app.get("/api/chat/history/{session_id}")
+async def get_chat_history(session_id: str, user = Depends(verify_token)):
+    """Get chat history for a session"""
+    user_id = user["uid"]
+    
+    doc = db.collection("chats").document(session_id).get()
+    
+    if doc.exists:
+        chat_data = doc.to_dict()
+        # Verify ownership (skip for guests viewing their own session)
+        if not user.get("is_guest") and chat_data.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        return {"success": True, "chat": chat_data}
+    else:
+        return {"success": False, "message": "Chat not found"}
+
+@app.get("/api/chat/user-chats")
+async def get_user_chats(user = Depends(require_auth)):
+    """Get all chats for logged-in user"""
+    user_id = user["uid"]
+    
+    chats = db.collection("chats").where("user_id", "==", user_id).stream()
+    
+    chat_list = []
+    for chat in chats:
+        chat_data = chat.to_dict()
+        messages = chat_data.get("messages", [])
+        last_message = messages[-1] if messages else None
+        
+        chat_list.append({
+            "session_id": chat_data.get("session_id"),
+            "last_message": last_message.get("content") if last_message else None,
+            "updated_at": chat_data.get("updated_at"),
+            "message_count": len(messages)
+        })
+    
+    return {"success": True, "chats": chat_list}
+
+# ============= DOCUMENT GENERATOR ENDPOINTS =============
+
+def generate_rent_agreement_pdf(data: Dict[str, Any]) -> io.BytesIO:
+    """Generate Rent Agreement PDF"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], alignment=TA_CENTER, fontSize=18, spaceAfter=30)
+    heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=12, spaceAfter=10, spaceBefore=15)
+    body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, alignment=TA_JUSTIFY, spaceAfter=8)
+    
+    elements = []
+    
+    # Title
+    elements.append(Paragraph("RENT AGREEMENT", title_style))
+    elements.append(Spacer(1, 20))
+    
+    # Date and Place
+    elements.append(Paragraph(f"This Rent Agreement is executed on <b>{data.get('agreement_date', '_____________')}</b> at <b>{data.get('city', '_____________')}</b>", body_style))
+    elements.append(Spacer(1, 15))
+    
+    # Parties
+    elements.append(Paragraph("BETWEEN", heading_style))
+    elements.append(Paragraph(f"""
+    <b>LANDLORD:</b> {data.get('landlord_name', '_____________')}<br/>
+    Address: {data.get('landlord_address', '_____________')}<br/>
+    (hereinafter referred to as the "LANDLORD")
+    """, body_style))
+    
+    elements.append(Paragraph("AND", heading_style))
+    elements.append(Paragraph(f"""
+    <b>TENANT:</b> {data.get('tenant_name', '_____________')}<br/>
+    Address: {data.get('tenant_address', '_____________')}<br/>
+    (hereinafter referred to as the "TENANT")
+    """, body_style))
+    
+    # Property Details
+    elements.append(Paragraph("PROPERTY DETAILS", heading_style))
+    elements.append(Paragraph(f"""
+    The Landlord hereby agrees to let out and the Tenant hereby agrees to take on rent the premises described below:<br/><br/>
+    <b>Property Address:</b> {data.get('property_address', '_____________')}<br/>
+    <b>Property Type:</b> {data.get('property_type', 'Residential')}<br/>
+    <b>Floor/Unit:</b> {data.get('floor_unit', '_____________')}
+    """, body_style))
+    
+    # Terms
+    elements.append(Paragraph("TERMS AND CONDITIONS", heading_style))
+    
+    terms = [
+        f"<b>1. Rent:</b> The monthly rent shall be Rs. {data.get('monthly_rent', '_____________')}/- (Rupees {data.get('rent_in_words', '_____________')} only), payable on or before the {data.get('rent_due_date', '5th')} of every month.",
+        f"<b>2. Security Deposit:</b> The Tenant shall pay a security deposit of Rs. {data.get('security_deposit', '_____________')}/- which shall be refunded at the end of the tenancy after deducting any dues.",
+        f"<b>3. Term:</b> This agreement shall be valid for a period of {data.get('lease_duration', '11 months')} from {data.get('start_date', '_____________')} to {data.get('end_date', '_____________')}.",
+        f"<b>4. Utilities:</b> {data.get('utilities_arrangement', 'Electricity and water charges shall be borne by the Tenant.')}",
+        "<b>5. Maintenance:</b> The Tenant shall maintain the premises in good condition and shall be responsible for minor repairs.",
+        "<b>6. Sub-letting:</b> The Tenant shall not sub-let or transfer the premises without prior written consent of the Landlord.",
+        f"<b>7. Notice Period:</b> Either party may terminate this agreement by giving {data.get('notice_period', 'one month')} written notice.",
+        "<b>8. Use of Premises:</b> The premises shall be used for residential purposes only."
+    ]
+    
+    for term in terms:
+        elements.append(Paragraph(term, body_style))
+    
+    elements.append(Spacer(1, 30))
+    
+    # Signatures
+    elements.append(Paragraph("IN WITNESS WHEREOF, the parties have signed this Agreement on the date mentioned above.", body_style))
+    elements.append(Spacer(1, 40))
+    
+    # Signature table
+    sig_data = [
+        ["LANDLORD", "TENANT"],
+        ["", ""],
+        ["Signature: _______________", "Signature: _______________"],
+        [f"Name: {data.get('landlord_name', '_____________')}", f"Name: {data.get('tenant_name', '_____________')}"],
+        ["Date: _______________", "Date: _______________"]
+    ]
+    
+    sig_table = Table(sig_data, colWidths=[250, 250])
+    sig_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(sig_table)
+    
+    # Witnesses
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph("WITNESSES:", heading_style))
+    elements.append(Paragraph("1. Name: _______________ Signature: _______________ Address: _______________", body_style))
+    elements.append(Paragraph("2. Name: _______________ Signature: _______________ Address: _______________", body_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_legal_notice_pdf(data: Dict[str, Any]) -> io.BytesIO:
+    """Generate Legal Notice PDF"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], alignment=TA_CENTER, fontSize=16, spaceAfter=20)
+    heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=11, spaceAfter=8, spaceBefore=12)
+    body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, alignment=TA_JUSTIFY, spaceAfter=8)
+    
+    elements = []
+    
+    elements.append(Paragraph("LEGAL NOTICE", title_style))
+    elements.append(Paragraph(f"Under Section {data.get('section', '80 of Civil Procedure Code')}", 
+                              ParagraphStyle('Subtitle', alignment=TA_CENTER, fontSize=10)))
+    elements.append(Spacer(1, 20))
+    
+    # Date
+    elements.append(Paragraph(f"Date: {data.get('notice_date', datetime.now().strftime('%d/%m/%Y'))}", body_style))
+    elements.append(Spacer(1, 10))
+    
+    # To
+    elements.append(Paragraph("TO,", heading_style))
+    elements.append(Paragraph(f"""
+    {data.get('recipient_name', '_____________')}<br/>
+    {data.get('recipient_address', '_____________')}
+    """, body_style))
+    
+    # Subject
+    elements.append(Paragraph("SUBJECT:", heading_style))
+    elements.append(Paragraph(data.get('subject', 'Legal Notice for _____________'), body_style))
+    
+    # Body
+    elements.append(Paragraph("Dear Sir/Madam,", body_style))
+    elements.append(Spacer(1, 10))
+    
+    elements.append(Paragraph(f"""
+    Under the instructions from and on behalf of my client, <b>{data.get('sender_name', '_____________')}</b>, 
+    residing at {data.get('sender_address', '_____________')}, I hereby serve upon you this Legal Notice as under:
+    """, body_style))
+    
+    # Facts
+    elements.append(Paragraph("FACTS OF THE CASE:", heading_style))
+    elements.append(Paragraph(data.get('facts', '_____________'), body_style))
+    
+    # Grievance
+    elements.append(Paragraph("GRIEVANCE:", heading_style))
+    elements.append(Paragraph(data.get('grievance', '_____________'), body_style))
+    
+    # Demand
+    elements.append(Paragraph("DEMAND:", heading_style))
+    elements.append(Paragraph(data.get('demand', '_____________'), body_style))
+    
+    # Warning
+    elements.append(Paragraph("WARNING:", heading_style))
+    elements.append(Paragraph(f"""
+    You are hereby called upon to comply with the above demand within {data.get('response_days', '15')} days 
+    from the receipt of this notice, failing which my client shall be constrained to initiate appropriate 
+    legal proceedings against you at your risk, cost, and consequences.
+    """, body_style))
+    
+    elements.append(Spacer(1, 30))
+    
+    # Signature
+    elements.append(Paragraph(f"Yours faithfully,", body_style))
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"_______________", body_style))
+    elements.append(Paragraph(f"{data.get('advocate_name', 'Advocate')}", body_style))
+    elements.append(Paragraph(f"On behalf of: {data.get('sender_name', '_____________')}", body_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_affidavit_pdf(data: Dict[str, Any]) -> io.BytesIO:
+    """Generate General Affidavit PDF"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*cm, bottomMargin=1*cm)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], alignment=TA_CENTER, fontSize=18, spaceAfter=30)
+    body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=11, alignment=TA_JUSTIFY, spaceAfter=12)
+    
+    elements = []
+    
+    elements.append(Paragraph("AFFIDAVIT", title_style))
+    elements.append(Spacer(1, 20))
+    
+    elements.append(Paragraph(f"""
+    I, <b>{data.get('deponent_name', '_____________')}</b>, aged {data.get('deponent_age', '_____________')} years, 
+    {data.get('deponent_occupation', '_____________')}, residing at {data.get('deponent_address', '_____________')}, 
+    do hereby solemnly affirm and declare as under:
+    """, body_style))
+    
+    elements.append(Spacer(1, 15))
+    
+    # Statements
+    statements = data.get('statements', ['_____________'])
+    for i, statement in enumerate(statements, 1):
+        elements.append(Paragraph(f"{i}. {statement}", body_style))
+    
+    elements.append(Spacer(1, 15))
+    
+    elements.append(Paragraph("""
+    I hereby declare that the contents of this affidavit are true and correct to the best of my knowledge 
+    and belief and nothing material has been concealed therefrom.
+    """, body_style))
+    
+    elements.append(Spacer(1, 30))
+    
+    # Verification
+    elements.append(Paragraph("VERIFICATION", ParagraphStyle('Heading', fontSize=12, spaceAfter=10)))
+    elements.append(Paragraph(f"""
+    Verified at {data.get('verification_place', '_____________')} on this {data.get('verification_date', '_____________')} 
+    that the contents of this affidavit are true and correct to the best of my knowledge and belief.
+    """, body_style))
+    
+    elements.append(Spacer(1, 40))
+    
+    elements.append(Paragraph("DEPONENT", body_style))
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph("_______________", body_style))
+    elements.append(Paragraph(f"({data.get('deponent_name', '_____________')})", body_style))
+    
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph("Before me,", body_style))
+    elements.append(Paragraph("Notary Public / Oath Commissioner", body_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
+@app.post("/api/documents/generate")
+@limiter.limit("10/minute")  # Rate limit: 10 documents per minute
+async def generate_document(
+    request: Request,
+    doc_data: DocumentData,
+    user = Depends(verify_token)
+):
+    """Generate legal document PDF"""
+    user_id = user["uid"]
+    doc_type = doc_data.document_type
+    data = doc_data.data
+    
+    # Generate PDF based on document type
+    generators = {
+        "rent_agreement": generate_rent_agreement_pdf,
+        "legal_notice": generate_legal_notice_pdf,
+        "affidavit": generate_affidavit_pdf,
+    }
+    
+    generator = generators.get(doc_type)
+    if not generator:
+        raise HTTPException(status_code=400, detail=f"Unknown document type: {doc_type}")
+    
+    try:
+        pdf_buffer = generator(data)
+        
+        # Store document metadata in database
+        doc_id = str(uuid.uuid4())[:8]
+        document_record = {
+            "id": doc_id,
+            "user_id": user_id,
+            "type": doc_type,
+            "data": data,
+            "created_at": datetime.now().isoformat(),
+            "status": "generated"
+        }
+        
+        db.collection("documents").document(doc_id).set(document_record)
+        
+        # Return PDF as download
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={doc_type}_{doc_id}.pdf",
+                "X-Document-ID": doc_id
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+@app.get("/api/documents/list")
+async def list_documents(user = Depends(require_auth)):
+    """List all documents for user"""
+    user_id = user["uid"]
+    
+    docs = db.collection("documents").where("user_id", "==", user_id).stream()
+    
+    doc_list = []
+    for doc in docs:
+        doc_data = doc.to_dict()
+        doc_list.append({
+            "id": doc_data.get("id"),
+            "type": doc_data.get("type"),
+            "created_at": doc_data.get("created_at"),
+            "status": doc_data.get("status")
+        })
+    
+    return {"success": True, "documents": doc_list}
+
+# ============= LAWYER MARKETPLACE ENDPOINTS =============
+
+@app.get("/api/lawyers/list")
+async def list_lawyers(
+    city: Optional[str] = None,
+    specialization: Optional[str] = None,
+    language: Optional[str] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None
+):
+    """List lawyers with optional filters"""
+    lawyers = db.collection("lawyers").stream()
+    
+    lawyer_list = []
+    for lawyer in lawyers:
+        lawyer_data = lawyer.to_dict()
+        
+        # Apply filters
+        if city and lawyer_data.get("city") != city:
+            continue
+        if specialization and specialization not in lawyer_data.get("specialization", []):
+            continue
+        if language and language not in lawyer_data.get("languages", []):
+            continue
+        if min_price and lawyer_data.get("price", 0) < min_price:
+            continue
+        if max_price and lawyer_data.get("price", 0) > max_price:
+            continue
+        
+        lawyer_list.append(lawyer_data)
+    
+    return {
+        "success": True,
+        "lawyers": lawyer_list,
+        "count": len(lawyer_list)
+    }
+
+@app.get("/api/lawyers/{lawyer_id}")
+async def get_lawyer_profile(lawyer_id: str):
+    """Get lawyer profile by ID"""
+    doc = db.collection("lawyers").document(lawyer_id).get()
+    
+    if doc.exists:
+        return {"success": True, "lawyer": doc.to_dict()}
+    else:
+        raise HTTPException(status_code=404, detail="Lawyer not found")
+
+# ============= BOOKING & PAYMENT ENDPOINTS =============
+
+@app.post("/api/bookings/create")
+async def create_booking(
+    booking: BookingRequest,
+    user = Depends(require_auth)
+):
+    """Create a booking and payment order"""
+    user_id = user["uid"]
+    
+    # Get lawyer details
+    lawyer_doc = db.collection("lawyers").document(booking.lawyer_id).get()
+    if not lawyer_doc.exists:
+        raise HTTPException(status_code=404, detail="Lawyer not found")
+    
+    lawyer_data = lawyer_doc.to_dict()
+    
+    # Calculate amount
+    price_per_30_min = lawyer_data.get("price", 500)
+    amount = price_per_30_min * (booking.duration // 30)
+    
+    # Create Razorpay order (mock)
+    order_data = {
+        "amount": amount * 100,  # Paise
+        "currency": "INR",
+        "payment_capture": 1,
+        "notes": {
+            "user_id": user_id,
+            "lawyer_id": booking.lawyer_id,
+            "consultation_type": booking.consultation_type
+        }
+    }
+    
+    razorpay_order = razorpay_client.order.create(data=order_data)
+    
+    # Save booking
+    booking_id = str(uuid.uuid4())[:8]
+    booking_data = {
+        "id": booking_id,
+        "user_id": user_id,
+        "lawyer_id": booking.lawyer_id,
+        "lawyer_name": lawyer_data.get("name"),
+        "consultation_type": booking.consultation_type,
+        "date": booking.date,
+        "time_slot": booking.time_slot,
+        "duration": booking.duration,
+        "amount": amount,
+        "status": "pending",
+        "razorpay_order_id": razorpay_order["id"],
+        "created_at": datetime.now().isoformat()
+    }
+    
+    db.collection("bookings").document(booking_id).set(booking_data)
+    
+    return {
+        "success": True,
+        "booking_id": booking_id,
+        "order_id": razorpay_order["id"],
+        "amount": amount,
+        "currency": "INR",
+        "razorpay_key": RAZORPAY_KEY_ID
+    }
+
+@app.post("/api/bookings/verify-payment")
+async def verify_payment(
+    payment: PaymentVerification,
+    user = Depends(require_auth)
+):
+    """Verify Razorpay payment (client-side verification)"""
+    try:
+        # Verify signature
+        params_dict = {
+            "razorpay_order_id": payment.razorpay_order_id,
+            "razorpay_payment_id": payment.razorpay_payment_id,
+            "razorpay_signature": payment.razorpay_signature
+        }
+        
+        razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        # Update booking status
+        bookings = db.collection("bookings").where("razorpay_order_id", "==", payment.razorpay_order_id).stream()
+        
+        for booking in bookings:
+            db.collection("bookings").document(booking.id).update({
+                "status": "confirmed",
+                "razorpay_payment_id": payment.razorpay_payment_id,
+                "payment_verified_at": datetime.now().isoformat()
+            })
+        
+        return {"success": True, "message": "Payment verified and booking confirmed"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Payment verification failed: {str(e)}")
+
+@app.get("/api/bookings/list")
+async def list_bookings(user = Depends(require_auth)):
+    """List all bookings for user"""
+    user_id = user["uid"]
+    
+    bookings = db.collection("bookings").where("user_id", "==", user_id).stream()
+    
+    booking_list = []
+    for booking in bookings:
+        booking_list.append(booking.to_dict())
+    
+    return {"success": True, "bookings": booking_list}
+
+# ============= RAZORPAY WEBHOOK =============
+
+@app.post("/api/webhooks/razorpay")
+async def razorpay_webhook(
+    request: Request
+):
+    """
+    Razorpay webhook handler for payment events.
+    Handles: payment.captured, payment.failed, payment.authorized
+    """
+    # Get signature from header
+    signature = request.headers.get("X-Razorpay-Signature", "")
+    
+    # Get raw body for signature verification
+    body = await request.body()
+    
+    # Verify signature (skip in mock mode)
+    if RAZORPAY_KEY_SECRET != "demo_secret":
+        if not verify_razorpay_signature(body, signature):
+            raise HTTPException(status_code=400, detail="Invalid signature")
+    
+    # Parse event
+    import json
+    try:
+        event = json.loads(body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    
+    event_type = event.get("event")
+    payload = event.get("payload", {}).get("payment", {}).get("entity", {})
+    
+    payment_id = payload.get("id")
+    order_id = payload.get("order_id")
+    
+    # Idempotency check
+    existing_payment = db.collection("payments").document(payment_id).get() if payment_id else None
+    if existing_payment and existing_payment.exists:
+        return {"success": True, "message": "Event already processed"}
+    
+    # Process based on event type
+    if event_type == "payment.captured":
+        # Payment successful
+        if order_id:
+            bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
+            for booking in bookings:
+                db.collection("bookings").document(booking.id).update({
+                    "status": "confirmed",
+                    "razorpay_payment_id": payment_id,
+                    "payment_captured_at": datetime.now().isoformat()
+                })
+        
+        # Record payment for idempotency
+        if payment_id:
+            db.collection("payments").document(payment_id).set({
+                "payment_id": payment_id,
+                "order_id": order_id,
+                "status": "captured",
+                "amount": payload.get("amount"),
+                "processed_at": datetime.now().isoformat()
+            })
+    
+    elif event_type == "payment.failed":
+        # Payment failed
+        if order_id:
+            bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
+            for booking in bookings:
+                db.collection("bookings").document(booking.id).update({
+                    "status": "payment_failed",
+                    "failure_reason": payload.get("error_description", "Unknown error"),
+                    "payment_failed_at": datetime.now().isoformat()
+                })
+        
+        if payment_id:
+            db.collection("payments").document(payment_id).set({
+                "payment_id": payment_id,
+                "order_id": order_id,
+                "status": "failed",
+                "error": payload.get("error_description"),
+                "processed_at": datetime.now().isoformat()
+            })
+    
+    elif event_type == "payment.authorized":
+        # Payment authorized (not yet captured)
+        if order_id:
+            bookings = db.collection("bookings").where("razorpay_order_id", "==", order_id).stream()
+            for booking in bookings:
+                db.collection("bookings").document(booking.id).update({
+                    "status": "authorized",
+                    "razorpay_payment_id": payment_id,
+                    "payment_authorized_at": datetime.now().isoformat()
+                })
+    
+    return {"success": True, "message": f"Processed {event_type}"}
+
+# ============= CASE TRACKING ENDPOINTS =============
+
+@app.post("/api/cases/create")
+async def create_case(
+    case: CaseData,
+    user = Depends(require_auth)
+):
+    """Create a new case"""
+    user_id = user["uid"]
+    
+    case_id = str(uuid.uuid4())[:8]
+    case_data = case.dict()
+    case_data["id"] = case_id
+    case_data["user_id"] = user_id
+    case_data["notes"] = []
+    case_data["documents"] = []
+    case_data["created_at"] = datetime.now().isoformat()
+    case_data["updated_at"] = datetime.now().isoformat()
+    
+    db.collection("cases").document(case_id).set(case_data)
+    
+    return {
+        "success": True,
+        "case_id": case_id,
+        "message": "Case created successfully"
+    }
+
+@app.get("/api/cases/list")
+async def list_cases(user = Depends(require_auth)):
+    """List all cases for user"""
+    user_id = user["uid"]
+    
+    cases = db.collection("cases").where("user_id", "==", user_id).stream()
+    
+    case_list = []
+    for case in cases:
+        case_list.append(case.to_dict())
+    
+    return {"success": True, "cases": case_list}
+
+@app.get("/api/cases/{case_id}")
+async def get_case(case_id: str, user = Depends(require_auth)):
+    """Get case details"""
+    user_id = user["uid"]
+    
+    doc = db.collection("cases").document(case_id).get()
+    
+    if doc.exists:
+        case_data = doc.to_dict()
+        if case_data.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return {"success": True, "case": case_data}
+    else:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+@app.put("/api/cases/{case_id}/notes")
+async def add_case_note(
+    case_id: str,
+    note: Dict[str, str] = Body(...),
+    user = Depends(require_auth)
+):
+    """Add note to case"""
+    user_id = user["uid"]
+    
+    doc = db.collection("cases").document(case_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Case not found")
+    
+    case_data = doc.to_dict()
+    if case_data.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    note_with_timestamp = {
+        "content": note.get("content", ""),
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    db.collection("cases").document(case_id).update({
+        "notes": ArrayUnion([note_with_timestamp]),
+        "updated_at": datetime.now().isoformat()
+    })
+    
+    return {"success": True, "message": "Note added successfully"}
+
+# ============= LAWS & SCHEMES ENDPOINTS =============
+
+@app.get("/api/laws/list")
+async def list_laws(
+    category: Optional[str] = None,
+    state: Optional[str] = None,
+    search: Optional[str] = None
+):
+    """List laws and schemes with filters"""
+    laws = db.collection("laws").stream()
+    
+    law_list = []
+    for law in laws:
+        law_data = law.to_dict()
+        
+        # Apply filters
+        if category and law_data.get("category") != category:
+            continue
+        if state and law_data.get("state") != state:
+            continue
+        if search and search.lower() not in law_data.get("title", "").lower():
+            continue
+        
+        law_list.append(law_data)
+    
+    return {
+        "success": True,
+        "laws": law_list,
+        "count": len(law_list)
+    }
+
+@app.get("/api/laws/{law_id}")
+async def get_law(law_id: str):
+    """Get law details"""
+    doc = db.collection("laws").document(law_id).get()
+    
+    if doc.exists:
+        return {"success": True, "law": doc.to_dict()}
+    else:
+        raise HTTPException(status_code=404, detail="Law not found")
+
+# ============= STARTUP =============
 
 if __name__ == "__main__":
     import uvicorn
