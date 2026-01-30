@@ -3,49 +3,54 @@
 ## Original Problem Statement
 Build the official website for SunoLegal (NyayAI) — an AI-powered legal assistance platform for India.
 
-## Updates Applied (Jan 30, 2026 - Phase 2)
+## Updates Applied (Jan 30, 2026 - Phase 3)
 
-### 1. Logo Replacement
+### Latest Changes (Phase 3)
+- ✅ **Internal Waitlist Forms**: Replaced Google Form links with internal forms that save to database
+- ✅ **Lawyer Interest Endpoint**: Added `/api/lawyer-interest` endpoint for lawyer registrations
+- ✅ **Google Forms as Secondary**: Kept Google Forms as "Prefer detailed survey?" fallback option
+- ✅ **Footer Scroll-to-Top**: Already implemented via ScrollToTop component in App.js
+- ✅ **Popup Centering**: Modal is properly centered with flex centering
+
+### Phase 2 Changes
 - ✅ User's logo applied globally (navbar, footer, popup, about page)
-- Logo URL: https://customer-assets.emergentagent.com/job_lawbuddy-9/artifacts/ib924i4i_Logo.png
+- ✅ Location set to "Mumbai, India" in footer and About page
+- ✅ Waitlist popup modal with 2-second delay, 7-day dismissal
+- ✅ Multiple waitlist access points (navbar, footer, /waitlist, hero)
+- ✅ New pages: /pricing, /laws-and-schemes, /faq
+- ✅ Hero gradient lightened for premium appearance
 
-### 2. Location
-- ✅ Set to "Mumbai, India" in footer and About page
+## API Endpoints
 
-### 3. Waitlist Popup Modal
-- ✅ Shows on first homepage visit with 2-second delay
-- ✅ Contains "Join Waitlist (Users)" and "I'm a Lawyer" buttons
-- ✅ "Not now" button dismisses popup
-- ✅ 7-day dismissal rule via localStorage
-- ✅ Mobile responsive
+### Waitlist
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /api/waitlist | POST | Submit user to waitlist |
+| /api/waitlist/count | GET | Get total waitlist count |
+| /api/lawyer-interest | POST | Submit lawyer interest |
+| /api/lawyer-interest/count | GET | Get lawyer interest count |
 
-### 4. Multiple Waitlist Access Points
-- ✅ **Navbar**: "Join Waitlist" + "For Lawyers" buttons (always visible)
-- ✅ **Footer**: "Get Early Access" section with both buttons
-- ✅ **Dedicated /waitlist page**: Two cards for Users and Lawyers
-- ✅ **Hero section**: Both buttons + "I'm a Lawyer" text link
-- ✅ **All CTA sections**: Both buttons available
+### Schema
+```json
+// User Waitlist
+{
+  "name": "string",
+  "email": "string",
+  "city": "string",
+  "user_type": "citizen|student|working|business"
+}
 
-### 5. New Pages Added
-- ✅ **/pricing**: Free + Professional (Coming Soon ₹299/mo) plans
-- ✅ **/laws-and-schemes**: Law category cards (Consumer, Property, Employment, Family, MSME, RTI)
-- ✅ **/faq**: 8 accordion FAQ items with CTAs
-- ✅ **/about** (updated): Founder story section added
+// Lawyer Interest
+{
+  "name": "string",
+  "email": "string",
+  "city": "string",
+  "practice_area": "string",
+  "experience": "string"
+}
+```
 
-### 6. Hero/Banner Gradient Fix
-- ✅ Lightened from pure black to slate-800 → slate-900 gradient
-- ✅ Added subtle amber glow accents
-- ✅ More premium, modern appearance
-
-### 7. Existing Features Preserved
-- ✅ Find Lawyer page working
-- ✅ NyayAI chat demo working
-- ✅ Documents page working
-- ✅ For Lawyers info page working
-- ✅ Case Tracker page working
-- ✅ Privacy page working
-
-## Google Form URLs
+## Google Form URLs (Secondary/Fallback)
 - **Users Waitlist**: https://docs.google.com/forms/d/e/1FAIpQLScNPCWdYMLW1vXmZhsL3NTxu8VJxEtAQq40iWjn1wNGB5K7cQ/viewform
 - **Lawyers Registration**: https://docs.google.com/forms/d/e/1FAIpQLSet8323DrdZSHRn5pVONUmz1yuiPBbxjiZwJ_un4XQWGkJm2A/viewform
 
@@ -60,24 +65,36 @@ Build the official website for SunoLegal (NyayAI) — an AI-powered legal assist
 | /case-tracker | Case Tracker Info | ✅ Working |
 | /about | About + Founder Story | ✅ Working |
 | /waitlist | Early Access Page | ✅ Working |
-| /pricing | Pricing Plans | ✅ NEW |
-| /laws-and-schemes | Laws & Schemes | ✅ NEW |
-| /faq | FAQ | ✅ NEW |
+| /pricing | Pricing Plans | ✅ Working |
+| /laws-and-schemes | Laws & Schemes | ✅ Working |
+| /faq | FAQ | ✅ Working |
 | /privacy | Privacy & Disclaimer | ✅ Working |
 
 ## Technical Stack
 - Frontend: React 18 + Tailwind CSS + shadcn/ui + Framer Motion
-- Backend: FastAPI with mock Firestore
-- Forms: Google Forms (external)
+- Backend: FastAPI with mock Firestore (in-memory)
+- Forms: Internal forms with Google Forms as fallback
+- Email: Resend integration (MOCKED - needs real API key)
 
-## Waitlist Access Points Summary
-1. Popup modal (first visit, 7-day cookie)
-2. Navbar buttons (always visible)
-3. Footer "Get Early Access" section
-4. /waitlist page (dedicated)
-5. Hero section buttons
-6. CTA sections on every page
-7. "I'm a Lawyer" secondary links throughout
+## MOCKED Components
+- **Database**: Mock in-memory Firestore (not real Firebase)
+- **Email**: Resend email disabled (RESEND_API_KEY not configured)
+- **Payments**: Mock Razorpay client
+- **NyayAI Chat**: UI mockup only (needs LLM integration)
+
+## Upcoming Tasks (P1)
+1. **Email Notifications**: Configure real Resend API key for waitlist confirmations
+2. **Document Generation**: Implement PDF generation flow
+3. **LLM Integration**: Connect NyayAI chat to real LLM
+
+## Future Tasks (P2)
+- Lawyer marketplace with profiles & booking
+- Case tracking feature
+- Analytics integration (Google Analytics)
+- Real Firebase/Firestore database
+
+## Test Reports
+- `/app/test_reports/iteration_3.json` - Latest (100% pass rate)
 
 ---
 Last Updated: January 30, 2026
