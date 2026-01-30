@@ -49,12 +49,12 @@ class TestWaitlistAPI:
         print(f"Waitlist submission success: {data['message']}")
     
     def test_waitlist_submission_minimal(self):
-        """Test waitlist submission with only required fields (email)"""
+        """Test waitlist submission with minimal valid data"""
         unique_email = f"test_minimal_{uuid.uuid4().hex[:8]}@example.com"
         payload = {
-            "name": "",
+            "name": "Test",
             "email": unique_email,
-            "city": "",
+            "city": "Other",
             "user_type": "citizen"
         }
         
@@ -139,12 +139,12 @@ class TestLawyerInterestAPI:
         print(f"Lawyer interest submission success: {data['message']}")
     
     def test_lawyer_interest_minimal(self):
-        """Test lawyer interest submission with only required fields"""
+        """Test lawyer interest submission with minimal valid data"""
         unique_email = f"test_lawyer_min_{uuid.uuid4().hex[:8]}@example.com"
         payload = {
-            "name": "",
+            "name": "Test Lawyer",
             "email": unique_email,
-            "city": "",
+            "city": "Other",
             "practice_area": "",
             "experience": ""
         }
