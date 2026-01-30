@@ -80,7 +80,7 @@ export default function ForLawyers() {
                 Connect with clients, set your own rates, and build your reputation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/waitlist">
+                <Link to="/lawyers-join">
                   <Button size="lg" data-testid="apply-lawyer-btn">
                     Apply as Lawyer
                     <ArrowRight className="w-5 h-5 ml-2" />
