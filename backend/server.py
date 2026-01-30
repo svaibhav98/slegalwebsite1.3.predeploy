@@ -2543,6 +2543,213 @@ async def get_waitlist_count():
     }
 
 
+# ============= LAWYER INTEREST ENDPOINTS =============
+
+class LawyerInterestEntry(BaseModel):
+    name: str
+    email: str
+    city: str
+    practice_area: str = ""
+    experience: str = ""
+
+
+async def send_lawyer_confirmation_email(to_email: str, name: str):
+    """Send confirmation email to lawyer who expressed interest"""
+    if not RESEND_API_KEY:
+        logger.info(f"Email skipped (no API key): {to_email}")
+        return None
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }}
+            .header h1 {{ color: #fff; margin: 0; font-size: 28px; }}
+            .header p {{ color: #d97706; margin: 10px 0 0; font-size: 14px; }}
+            .content {{ background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; }}
+            .highlight {{ background: #fef3c7; border-left: 4px solid #d97706; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }}
+            .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>⚖️ SunoLegal</h1>
+                <p>For Legal Professionals</p>
+            </div>
+            <div class="content">
+                <h2>Thank You, {name}!</h2>
+                <p>We've received your interest in joining SunoLegal as a legal professional. Our team is building India's most accessible legal platform.</p>
+                
+                <div class="highlight">
+                    <strong>Benefits for Early Lawyers:</strong>
+                    <ul>
+                        <li>✅ Priority verification and profile setup</li>
+                        <li>📊 Lower platform commission rates</li>
+                        <li>🌟 Featured profile placement at launch</li>
+                        <li>💡 Input on platform features and policies</li>
+                    </ul>
+                </div>
+                
+                <p>We'll reach out soon to discuss the verification process and onboarding details.</p>
+                
+                <p style="margin-top: 30px;">
+                    Best regards,<br>
+                    <strong>The SunoLegal Team</strong>
+                </p>
+            </div>
+            <div class="footer">
+                <p>© 2025 SunoLegal. Making legal help accessible for every Indian.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    params = {
+        "from": SENDER_EMAIL,
+        "to": [to_email],
+        "subject": "Thank You for Your Interest in SunoLegal! ⚖️",
+        "html": html_content
+    }
+    
+    try:
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Lawyer confirmation email sent to {to_email}")
+        return email
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return None
+
+
+async def send_lawyer_admin_notification(entry: LawyerInterestEntry):
+    """Send notification to admin about new lawyer interest"""
+    if not RESEND_API_KEY:
+        return None
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
+            .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: #0f172a; color: #fff; padding: 15px; text-align: center; border-radius: 8px 8px 0 0; }}
+            .content {{ background: #f8fafc; padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
+            .field {{ margin: 10px 0; }}
+            .label {{ font-weight: bold; color: #475569; }}
+            .value {{ color: #0f172a; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2 style="margin: 0;">⚖️ New Lawyer Interest!</h2>
+            </div>
+            <div class="content">
+                <div class="field">
+                    <span class="label">Name:</span>
+                    <span class="value">{entry.name}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Email:</span>
+                    <span class="value">{entry.email}</span>
+                </div>
+                <div class="field">
+                    <span class="label">City:</span>
+                    <span class="value">{entry.city}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Practice Area:</span>
+                    <span class="value">{entry.practice_area or 'Not specified'}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Experience:</span>
+                    <span class="value">{entry.experience or 'Not specified'} years</span>
+                </div>
+                <div class="field">
+                    <span class="label">Time:</span>
+                    <span class="value">{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    params = {
+        "from": SENDER_EMAIL,
+        "to": [ADMIN_EMAIL],
+        "subject": f"New Lawyer Interest: {entry.name} - {entry.practice_area or 'General'}",
+        "html": html_content
+    }
+    
+    try:
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Admin notification sent for lawyer {entry.email}")
+        return email
+    except Exception as e:
+        logger.error(f"Failed to send admin notification: {str(e)}")
+        return None
+
+
+@app.post("/api/lawyer-interest")
+@limiter.limit("5/minute")  # Rate limit: 5 submissions per minute per IP
+async def register_lawyer_interest(request: Request, entry: LawyerInterestEntry):
+    """
+    Register interest from lawyers wanting to join SunoLegal.
+    Stores in separate collection for lawyer verification workflow.
+    """
+    # Check if email already exists
+    existing = db.collection("lawyer_interest").where("email", "==", entry.email).stream()
+    existing_list = list(existing)
+    
+    if existing_list:
+        return {
+            "success": True,
+            "message": "You've already registered your interest! We'll contact you soon."
+        }
+    
+    # Store in database
+    lawyer_data = {
+        "name": entry.name,
+        "email": entry.email,
+        "city": entry.city,
+        "practice_area": entry.practice_area,
+        "experience": entry.experience,
+        "created_at": datetime.now().isoformat(),
+        "status": "pending_verification"
+    }
+    
+    _, doc_ref = db.collection("lawyer_interest").add(lawyer_data)
+    
+    # Send emails (non-blocking)
+    try:
+        await send_lawyer_confirmation_email(entry.email, entry.name.split()[0])
+        await send_lawyer_admin_notification(entry)
+    except Exception as e:
+        logger.error(f"Email error (non-blocking): {str(e)}")
+    
+    return {
+        "success": True,
+        "message": f"Thank you, {entry.name.split()[0]}! We'll contact you about onboarding soon.",
+        "interest_id": doc_ref.id
+    }
+
+
+@app.get("/api/lawyer-interest/count")
+async def get_lawyer_interest_count():
+    """Get total lawyer interest count (public)"""
+    entries = list(db.collection("lawyer_interest").stream())
+    return {
+        "success": True,
+        "count": len(entries)
+    }
+
+
 # ============= STARTUP =============
 
 if __name__ == "__main__":
