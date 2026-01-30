@@ -7,8 +7,6 @@ import {
   Target, 
   Heart,
   Users,
-  ArrowRight,
-  CheckCircle2,
   Scale,
   Quote,
   MapPin
