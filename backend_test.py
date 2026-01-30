@@ -134,8 +134,9 @@ def test_lawyers_api():
     response = make_request('GET', '/lawyers/list', params={'city': 'Delhi'})
     if response and response.status_code == 200:
         data = response.json()
+        lawyers = data.get('items', data.get('lawyers', []))
         if data.get('success'):
-            delhi_lawyers = data.get('lawyers', [])
+            delhi_lawyers = lawyers
             print_success(f"Found {len(delhi_lawyers)} lawyers in Delhi")
             success_count += 1
         else:
