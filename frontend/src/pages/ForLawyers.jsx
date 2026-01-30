@@ -247,7 +247,7 @@ export default function ForLawyers() {
                 <div className="text-slate-400">Joining Fee</div>
               </div>
             </div>
-            <Link to="/waitlist">
+            <Link to="/lawyers-join">
               <Button size="lg" data-testid="cta-apply-lawyer-btn">
                 Apply Now
                 <ArrowRight className="w-5 h-5 ml-2" />
