@@ -13,9 +13,9 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 import { 
+  Scale,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   Loader2,
   ExternalLink
 } from 'lucide-react';
