@@ -3,7 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Menu, X, Users, Scale } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { FORMS } from './WaitlistPopup';
+
+// Google Form URLs (kept for reference in internal pages)
+export const FORMS = {
+  users: 'https://docs.google.com/forms/d/e/1FAIpQLScNPCWdYMLW1vXmZhsL3NTxu8VJxEtAQq40iWjn1wNGB5K7cQ/viewform',
+  lawyers: 'https://docs.google.com/forms/d/e/1FAIpQLSet8323DrdZSHRn5pVONUmz1yuiPBbxjiZwJ_un4XQWGkJm2A/viewform'
+};
 
 const navLinks = [
   { name: 'Home', path: '/' },
