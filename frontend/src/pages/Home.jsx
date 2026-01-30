@@ -17,19 +17,13 @@ import {
   Home as HomeIcon,
   Briefcase
 } from 'lucide-react';
+import { FORMS } from '../components/WaitlistPopup';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
   transition: { duration: 0.5 }
-};
-
-const stagger = {
-  initial: { opacity: 0 },
-  whileInView: { opacity: 1 },
-  viewport: { once: true },
-  transition: { staggerChildren: 0.1 }
 };
 
 const features = [
@@ -80,29 +74,32 @@ const userTypes = [
 export default function Home() {
   return (
     <div className="overflow-hidden">
-      {/* Hero Section - Dark */}
+      {/* Hero Section - Updated Gradient */}
       <section 
         data-testid="hero-section"
-        className="relative min-h-screen bg-dark grain-overlay flex items-center"
+        className="relative min-h-screen flex items-center"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800" />
+        {/* Improved gradient - lighter and more premium */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-slate-800/30" />
         
-        {/* Decorative Elements */}
-        <div className="absolute top-20 right-10 w-72 h-72 bg-amber-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl" />
+        {/* Decorative Elements - Enhanced amber glow */}
+        <div className="absolute top-20 right-10 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-10 w-80 h-80 bg-amber-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-amber-400/5 rounded-full blur-2xl" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-32 md:py-40">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Hero Content */}
             <motion.div {...fadeUp} className="text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-600/20 text-amber-400 text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium mb-6 border border-amber-500/30">
                 <Sparkles className="w-4 h-4" />
                 NyayAI Powered Legal Assistant
               </div>
               
               <h1 className="text-5xl md:text-7xl font-bold text-white font-heading tracking-tight leading-tight mb-6">
                 Legal Help,{' '}
-                <span className="text-amber-400">Simplified</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">Simplified</span>
               </h1>
               
               <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-xl">
@@ -115,26 +112,41 @@ export default function Home() {
                   <Button 
                     data-testid="try-nyayai-btn"
                     size="lg" 
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto shadow-lg shadow-amber-500/20"
                   >
                     Try NyayAI
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <Link to="/waitlist">
+                <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
                   <Button 
                     data-testid="join-waitlist-hero-btn"
                     variant="outline" 
                     size="lg"
-                    className="w-full sm:w-auto border-slate-500 text-white bg-transparent hover:bg-white/10"
+                    className="w-full sm:w-auto border-slate-500 text-white bg-white/5 hover:bg-white/10 backdrop-blur-sm"
                   >
+                    <Users className="w-5 h-5 mr-2" />
                     Join Waitlist
                   </Button>
-                </Link>
+                </a>
+              </div>
+              
+              {/* Secondary CTA */}
+              <div className="mt-4">
+                <a 
+                  href={FORMS.lawyers} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-sm text-slate-400 hover:text-amber-400 transition-colors"
+                >
+                  <Scale className="w-4 h-4 mr-2" />
+                  I'm a Lawyer – Join Early
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </a>
               </div>
               
               {/* Trust Indicators */}
-              <div className="flex items-center gap-6 mt-10 pt-10 border-t border-slate-700">
+              <div className="flex items-center gap-6 mt-10 pt-10 border-t border-slate-700/50">
                 <div className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-green-400" />
                   <span className="text-sm text-slate-400">End-to-End Encrypted</span>
@@ -152,13 +164,13 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="relative hidden lg:block"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
                 <img 
                   src="https://images.unsplash.com/photo-1737574994780-e31827afaed7?w=600&h=400&fit=crop"
                   alt="Professional lawyer working"
                   className="w-full h-auto"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" />
               </div>
               
               {/* Floating Card */}
@@ -179,14 +191,14 @@ export default function Home() {
         
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-slate-600 rounded-full flex justify-center pt-2">
+          <div className="w-6 h-10 border-2 border-slate-600/50 rounded-full flex justify-center pt-2">
             <div className="w-1 h-2 bg-amber-400 rounded-full" />
           </div>
         </div>
       </section>
 
       {/* How It Works - Light */}
-      <section data-testid="how-it-works" className="py-24 bg-light">
+      <section data-testid="how-it-works" className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <motion.div {...fadeUp} className="text-center mb-16">
             <span className="text-sm font-medium tracking-wide uppercase text-amber-600 mb-4 block">
@@ -207,7 +219,7 @@ export default function Home() {
                 transition={{ delay: index * 0.1 }}
                 className="text-center"
               >
-                <div className="text-6xl font-bold text-amber-100 font-heading mb-4">
+                <div className="text-6xl font-bold text-amber-200 font-heading mb-4">
                   {step.number}
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
@@ -243,7 +255,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="h-full group cursor-pointer">
+                <Card className="h-full group cursor-pointer border-0 shadow-card hover:shadow-float transition-all">
                   <CardContent className="p-8">
                     <div className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center mb-6`}>
                       <feature.icon className="w-7 h-7" />
@@ -289,7 +301,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white p-6 rounded-xl border border-slate-100 hover:shadow-float transition-all duration-300"
+                className="bg-white p-6 rounded-xl border-0 shadow-card hover:shadow-float transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
                   <type.icon className="w-6 h-6 text-amber-700" />
@@ -302,9 +314,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Section - Dark */}
-      <section data-testid="trust-section" className="py-24 bg-dark grain-overlay relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800" />
+      {/* Trust Section - Updated Gradient */}
+      <section data-testid="trust-section" className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -361,17 +374,18 @@ export default function Home() {
               Get early access to the app.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/nyayai">
-                <Button size="lg" data-testid="cta-try-nyayai-btn">
-                  Try NyayAI Demo
-                  <ArrowRight className="w-5 h-5 ml-2" />
+              <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+                <Button size="lg" data-testid="cta-users-btn">
+                  <Users className="w-5 h-5 mr-2" />
+                  Join Waitlist (Users)
                 </Button>
-              </Link>
-              <Link to="/waitlist">
-                <Button variant="outline" size="lg" data-testid="cta-waitlist-btn">
-                  Join Waitlist
+              </a>
+              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="lg" data-testid="cta-lawyers-btn" className="border-amber-200 text-amber-700 hover:bg-amber-50">
+                  <Scale className="w-5 h-5 mr-2" />
+                  I'm a Lawyer
                 </Button>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>
