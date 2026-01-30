@@ -12,7 +12,6 @@ import {
   Wallet,
   Shield,
   TrendingUp,
-  Clock,
   Star
 } from 'lucide-react';
 
