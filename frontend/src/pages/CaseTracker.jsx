@@ -7,9 +7,7 @@ import {
   Bell, 
   Calendar, 
   FileText, 
-  Clock,
   ArrowRight,
-  CheckCircle2,
   Plus,
   AlertCircle
 } from 'lucide-react';
