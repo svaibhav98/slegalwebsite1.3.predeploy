@@ -480,7 +480,44 @@ def test_cases_api():
     
     return success_count == total_tests
 
-def test_user_profile_api():
+def test_waitlist_api():
+    """Test waitlist endpoint"""
+    print_test_header("Waitlist API")
+    
+    success_count = 0
+    total_tests = 1
+    
+    # Test waitlist submission
+    print_info("Testing POST /api/waitlist")
+    
+    waitlist_payload = {
+        "name": "Test User Backend",
+        "email": "testbackend@example.com",
+        "city": "Mumbai",
+        "user_type": "citizen"
+    }
+    
+    response = make_request('POST', '/waitlist', data=waitlist_payload)
+    if response and response.status_code == 200:
+        data = response.json()
+        if data.get('success') and data.get('waitlist_id'):
+            print_success("Waitlist submission successful")
+            print_info(f"Waitlist ID: {data.get('waitlist_id')}")
+            print_info(f"Message: {data.get('message', 'No message')}")
+            success_count += 1
+        else:
+            print_error("Invalid waitlist response format")
+            print_error(f"Response: {data}")
+    else:
+        print_error(f"Waitlist submission failed - Status: {response.status_code if response else 'No response'}")
+        if response:
+            try:
+                error_data = response.json()
+                print_error(f"Error details: {error_data}")
+            except:
+                print_error(f"Response text: {response.text[:200]}")
+    
+    return success_count == total_tests
     """Test user profile endpoints"""
     print_test_header("User Profile API")
     
