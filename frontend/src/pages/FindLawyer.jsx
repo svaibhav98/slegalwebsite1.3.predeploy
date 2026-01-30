@@ -17,13 +17,11 @@ import {
   Star, 
   CheckCircle2,
   MapPin,
-  Briefcase,
   Languages,
   Video,
   Phone,
   MessageSquare,
-  ArrowRight,
-  Filter
+  ArrowRight
 } from 'lucide-react';
 
 const sampleLawyers = [
