@@ -17,7 +17,6 @@ import {
   Home as HomeIcon,
   Briefcase
 } from 'lucide-react';
-import { FORMS } from '../components/WaitlistPopup';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
