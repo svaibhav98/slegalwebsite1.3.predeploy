@@ -276,13 +276,13 @@ export default function About() {
               Be among the first to experience SunoLegal. Sign up for early access today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+              <Link to="/waitlist">
                 <Button size="lg" data-testid="about-users-cta">
                   <Users className="w-4 h-4 mr-2" />
                   Join Waitlist (Users)
                 </Button>
-              </a>
-              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+              </Link>
+              <Link to="/lawyers-join">
                 <Button 
                   size="lg" 
                   variant="outline" 
@@ -291,7 +291,7 @@ export default function About() {
                   <Scale className="w-4 h-4 mr-2" />
                   I'm a Lawyer
                 </Button>
-              </a>
+              </Link>
             </div>
           </motion.div>
         </div>
