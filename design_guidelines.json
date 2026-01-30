@@ -1,0 +1,159 @@
+{
+  "project_name": "SunoLegal (NyayAI)",
+  "design_philosophy": {
+    "persona": "E1: The Anti-AI Designer",
+    "core_principles": [
+      "Fusion over Imitation: Legal Authority x Modern Tech Warmth",
+      "Emotion First: Trust, Clarity, Empowerment",
+      "Content is King: Every pixel serves the legal narrative",
+      "Contrast: Deep Dark Hero vs. Paper-White Content"
+    ],
+    "anti_patterns": [
+      "No generic 'SaaS Blue' as primary color",
+      "No 'Inter' for headings",
+      "No symmetrical, boring grids",
+      "No generic 'handshake' stock photos"
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Merriweather, serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-bold tracking-tight leading-tight",
+      "h2": "text-4xl md:text-5xl font-semibold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-medium",
+      "body_lg": "text-lg md:text-xl leading-relaxed",
+      "body_base": "text-base leading-relaxed",
+      "caption": "text-sm font-medium tracking-wide uppercase text-muted-foreground"
+    },
+    "usage_rules": [
+      "Headings must use Merriweather for authority.",
+      "Body text must use Manrope for readability.",
+      "Use 'tracking-tight' on all headings larger than 32px.",
+      "Legal disclaimers should be small but high contrast (no grey-on-grey)."
+    ]
+  },
+  "colors": {
+    "palette_name": "Golden Justice",
+    "theme_strategy": "Mixed (Dark Hero / Light Content)",
+    "primary": {
+      "DEFAULT": "#d97706",
+      "foreground": "#ffffff",
+      "hover": "#b45309"
+    },
+    "secondary": {
+      "DEFAULT": "#475569",
+      "foreground": "#f8fafc"
+    },
+    "background": {
+      "dark": "#0f172a",
+      "light": "#f9f9f7",
+      "paper": "#ffffff"
+    },
+    "accent": {
+      "gold": "#f59e0b",
+      "amber": "#d97706",
+      "slate": "#334155"
+    },
+    "neutral": {
+      "900": "#0f172a",
+      "800": "#1e293b",
+      "100": "#f1f5f9",
+      "50": "#f8fafc"
+    },
+    "semantic": {
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#3b82f6"
+    }
+  },
+  "visual_enhancers": {
+    "radius": "rounded-md",
+    "shadows": {
+      "card": "shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
+      "float": "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+      "glow": "shadow-[0_0_20px_rgba(217,119,6,0.3)]"
+    },
+    "borders": {
+      "subtle": "border border-slate-200",
+      "highlight": "border-l-4 border-amber-600"
+    },
+    "textures": [
+      "Subtle grain overlay on dark backgrounds",
+      "Paper texture on light backgrounds (optional)"
+    ]
+  },
+  "layout_system": {
+    "grid_strategy": "Bento Grid (Mode A)",
+    "spacing": {
+      "container_padding": "px-6 md:px-12 lg:px-24",
+      "section_gap": "gap-16 md:gap-24",
+      "element_gap": "gap-6"
+    },
+    "containers": {
+      "max_width": "max-w-7xl mx-auto"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-amber-600 text-white hover:bg-amber-700 rounded-full px-8 py-3 font-medium transition-all shadow-lg hover:shadow-amber-600/20",
+      "secondary": "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-full px-8 py-3 font-medium transition-all",
+      "ghost": "text-slate-600 hover:text-amber-700 hover:bg-amber-50 rounded-md px-4 py-2 transition-colors"
+    },
+    "cards": {
+      "feature": "bg-white p-8 rounded-xl border border-slate-100 shadow-card hover:shadow-float transition-all duration-300 group",
+      "pricing": "bg-slate-900 text-white p-8 rounded-2xl border border-slate-800 relative overflow-hidden"
+    },
+    "inputs": {
+      "default": "h-12 bg-white border-slate-200 focus:border-amber-500 focus:ring-amber-500/20 rounded-md transition-all"
+    }
+  },
+  "image_assets": {
+    "hero_lawyer": {
+      "url": "https://images.unsplash.com/photo-1737574994780-e31827afaed7",
+      "alt": "Professional Indian lawyer working at desk",
+      "usage": "Hero section or 'Find a Lawyer' feature highlight"
+    },
+    "document_signing": {
+      "url": "https://images.unsplash.com/photo-1721379805142-faaa28ab1424",
+      "alt": "Close up of hands signing legal documents",
+      "usage": "Document Generator section background or visual"
+    },
+    "family_trust": {
+      "url": "https://images.unsplash.com/photo-1730130596425-197566414dc4",
+      "alt": "Happy Indian family at home",
+      "usage": "Who it's for / Trust section"
+    }
+  },
+  "motion": {
+    "library": "framer-motion",
+    "preferences": {
+      "reduced_motion": "respect",
+      "scroll": "lenis (smooth scrolling)",
+      "hover": "scale-105 transition-transform duration-200"
+    },
+    "animations": {
+      "fade_up": {
+        "initial": { "opacity": 0, "y": 20 },
+        "whileInView": { "opacity": 1, "y": 0 },
+        "viewport": { "once": true },
+        "transition": { "duration": 0.5, "ease": "easeOut" }
+      },
+      "stagger_children": {
+        "visible": { "transition": { "staggerChildren": 0.1 } }
+      }
+    }
+  },
+  "universal_guidelines": [
+    "Do not use gradients for text.",
+    "Ensure all text has sufficient contrast (APCA/WCAG AA).",
+    "Use 'data-testid' on all interactive elements.",
+    "Mobile-first responsive design is mandatory.",
+    "No 'Lorem Ipsum' - use realistic legal placeholders (e.g., 'Rental Agreement', 'Non-Disclosure Agreement')."
+  ],
+  "instructions_to_main_agent": "You are building SunoLegal. Use the 'Golden Justice' palette. Implement the 'Bento Grid' for the features section. Use the provided image URLs for their respective sections. Ensure the 'Find a Lawyer' and 'Document Generator' sections feel functional, not just decorative. The AI Chat mockup should use a 'Tracing Beam' effect to feel alive."
+}
