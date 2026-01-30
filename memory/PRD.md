@@ -5,12 +5,16 @@ Build the official website for SunoLegal (NyayAI) — an AI-powered legal assist
 
 ## Updates Applied (Jan 30, 2026 - Phase 3)
 
-### Latest Changes (Phase 3)
-- ✅ **Internal Waitlist Forms**: Replaced Google Form links with internal forms that save to database
-- ✅ **Lawyer Interest Endpoint**: Added `/api/lawyer-interest` endpoint for lawyer registrations
-- ✅ **Google Forms as Secondary**: Kept Google Forms as "Prefer detailed survey?" fallback option
-- ✅ **Footer Scroll-to-Top**: Already implemented via ScrollToTop component in App.js
-- ✅ **Popup Centering**: Modal is properly centered with flex centering
+### Latest Changes (Phase 3 - CTA Routing Fix)
+- ✅ **Created `/lawyers-join` page**: Dedicated internal form for lawyers with Google Form fallback
+- ✅ **All CTAs Route to Internal Pages**: No CTA directly opens Google Forms anymore
+  - "Join Waitlist" → `/waitlist`
+  - "For Lawyers" / "I'm a Lawyer" → `/lawyers-join`
+- ✅ **Google Forms as Secondary Option**: "Prefer detailed survey?" button available inside internal pages
+- ✅ **Navbar CTAs**: Updated to use `Link` to internal routes
+- ✅ **Footer CTAs**: Updated to use `Link` to internal routes
+- ✅ **Hero Section CTAs**: Updated to navigate internally
+- ✅ **All Page CTAs**: Pricing, FAQ, About, ForLawyers all updated
 
 ### Phase 2 Changes
 - ✅ User's logo applied globally (navbar, footer, popup, about page)
