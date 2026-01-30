@@ -32,13 +32,13 @@ export default function Footer() {
               <p className="text-slate-400 text-sm">Join the waitlist and help shape India's legal clarity platform</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+              <Link to="/waitlist">
                 <Button data-testid="footer-users-btn" className="w-full sm:w-auto">
                   <Users className="w-4 h-4 mr-2" />
                   Join Waitlist (Users)
                 </Button>
-              </a>
-              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+              </Link>
+              <Link to="/lawyers-join">
                 <Button 
                   variant="outline" 
                   className="w-full sm:w-auto border-slate-600 text-white hover:bg-slate-800"
@@ -47,7 +47,7 @@ export default function Footer() {
                   <Scale className="w-4 h-4 mr-2" />
                   Lawyers – Join Early
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
