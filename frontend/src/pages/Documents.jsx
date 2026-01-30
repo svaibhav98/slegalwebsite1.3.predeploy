@@ -68,7 +68,7 @@ const documentTemplates = [
 
 export default function Documents() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [, setFormData] = useState({});
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
