@@ -13,7 +13,6 @@ import {
   Quote,
   MapPin
 } from 'lucide-react';
-import { FORMS } from '../components/WaitlistPopup';
 
 const values = [
   {
