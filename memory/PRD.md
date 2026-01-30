@@ -99,7 +99,8 @@ Build the official website for SunoLegal (NyayAI) — an AI-powered legal assist
 - Real Firebase/Firestore database
 
 ## Test Reports
-- `/app/test_reports/iteration_3.json` - Latest (100% pass rate)
+- `/app/test_reports/iteration_4.json` - Latest (100% pass rate - CTA routing fix)
+- `/app/test_reports/iteration_3.json` - Previous (100% pass rate)
 
 ---
 Last Updated: January 30, 2026
