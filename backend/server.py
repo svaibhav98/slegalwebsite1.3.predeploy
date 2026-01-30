@@ -2337,6 +2337,212 @@ async def get_law(law_id: str):
     else:
         raise HTTPException(status_code=404, detail="Law not found")
 
+# ============= WAITLIST ENDPOINTS =============
+
+class WaitlistEntry(BaseModel):
+    name: str
+    email: str
+    city: str
+    user_type: str  # citizen, lawyer, business, other
+
+
+async def send_waitlist_email(to_email: str, name: str):
+    """Send confirmation email to waitlist user"""
+    if not RESEND_API_KEY:
+        logger.info(f"Email skipped (no API key): {to_email}")
+        return None
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }}
+            .header h1 {{ color: #fff; margin: 0; font-size: 28px; }}
+            .header p {{ color: #d97706; margin: 10px 0 0; font-size: 14px; }}
+            .content {{ background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; }}
+            .highlight {{ background: #fef3c7; border-left: 4px solid #d97706; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }}
+            .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+            .btn {{ display: inline-block; background: #d97706; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 50px; margin: 10px 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>⚖️ SunoLegal</h1>
+                <p>NyayAI Powered Legal Assistant</p>
+            </div>
+            <div class="content">
+                <h2>Welcome to the Waitlist, {name}!</h2>
+                <p>Thank you for joining the SunoLegal waitlist. You're now among the first to experience India's AI-powered legal assistance platform.</p>
+                
+                <div class="highlight">
+                    <strong>What's Coming:</strong>
+                    <ul>
+                        <li>🤖 NyayAI - AI legal guidance in plain language</li>
+                        <li>📄 Document Generator - Create legal documents instantly</li>
+                        <li>👨‍⚖️ Verified Lawyers - Connect with Bar Council verified experts</li>
+                        <li>📋 Case Tracker - Never miss a hearing date</li>
+                    </ul>
+                </div>
+                
+                <p>We'll notify you as soon as we launch. Stay tuned!</p>
+                
+                <p style="margin-top: 30px;">
+                    Best regards,<br>
+                    <strong>The SunoLegal Team</strong>
+                </p>
+            </div>
+            <div class="footer">
+                <p>© 2025 SunoLegal. Making legal help accessible for every Indian.</p>
+                <p>This is an automated message. Please do not reply directly.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    params = {
+        "from": SENDER_EMAIL,
+        "to": [to_email],
+        "subject": "Welcome to SunoLegal Waitlist! 🎉",
+        "html": html_content
+    }
+    
+    try:
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Confirmation email sent to {to_email}")
+        return email
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return None
+
+
+async def send_admin_notification(entry: WaitlistEntry):
+    """Send notification to admin about new waitlist signup"""
+    if not RESEND_API_KEY:
+        return None
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
+            .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: #0f172a; color: #fff; padding: 15px; text-align: center; border-radius: 8px 8px 0 0; }}
+            .content {{ background: #f8fafc; padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
+            .field {{ margin: 10px 0; }}
+            .label {{ font-weight: bold; color: #475569; }}
+            .value {{ color: #0f172a; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2 style="margin: 0;">🎉 New Waitlist Signup!</h2>
+            </div>
+            <div class="content">
+                <div class="field">
+                    <span class="label">Name:</span>
+                    <span class="value">{entry.name}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Email:</span>
+                    <span class="value">{entry.email}</span>
+                </div>
+                <div class="field">
+                    <span class="label">City:</span>
+                    <span class="value">{entry.city}</span>
+                </div>
+                <div class="field">
+                    <span class="label">User Type:</span>
+                    <span class="value">{entry.user_type}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Time:</span>
+                    <span class="value">{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    params = {
+        "from": SENDER_EMAIL,
+        "to": [ADMIN_EMAIL],
+        "subject": f"New Waitlist Signup: {entry.name} ({entry.user_type})",
+        "html": html_content
+    }
+    
+    try:
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Admin notification sent for {entry.email}")
+        return email
+    except Exception as e:
+        logger.error(f"Failed to send admin notification: {str(e)}")
+        return None
+
+
+@app.post("/api/waitlist")
+@limiter.limit("5/minute")  # Rate limit: 5 submissions per minute per IP
+async def join_waitlist(request: Request, entry: WaitlistEntry):
+    """
+    Join the SunoLegal waitlist.
+    Sends confirmation email to user and notification to admin.
+    """
+    # Check if email already exists
+    existing = db.collection("waitlist").where("email", "==", entry.email).stream()
+    existing_list = list(existing)
+    
+    if existing_list:
+        return {
+            "success": True,
+            "message": "You're already on the waitlist! We'll notify you when we launch."
+        }
+    
+    # Store in database
+    waitlist_data = {
+        "name": entry.name,
+        "email": entry.email,
+        "city": entry.city,
+        "user_type": entry.user_type,
+        "created_at": datetime.now().isoformat(),
+        "status": "pending"
+    }
+    
+    _, doc_ref = db.collection("waitlist").add(waitlist_data)
+    
+    # Send emails (non-blocking)
+    try:
+        # Send user confirmation
+        await send_waitlist_email(entry.email, entry.name.split()[0])
+        
+        # Send admin notification
+        await send_admin_notification(entry)
+    except Exception as e:
+        logger.error(f"Email error (non-blocking): {str(e)}")
+    
+    return {
+        "success": True,
+        "message": f"Welcome to the waitlist, {entry.name.split()[0]}! Check your email for confirmation.",
+        "waitlist_id": doc_ref.id
+    }
+
+
+@app.get("/api/waitlist/count")
+async def get_waitlist_count():
+    """Get total waitlist count (public)"""
+    entries = list(db.collection("waitlist").stream())
+    return {
+        "success": True,
+        "count": len(entries)
+    }
+
+
 # ============= STARTUP =============
 
 if __name__ == "__main__":
