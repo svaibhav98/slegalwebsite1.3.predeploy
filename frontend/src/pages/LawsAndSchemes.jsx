@@ -139,18 +139,18 @@ export default function LawsAndSchemes() {
                   Join our waitlist to access NyayAI for personalized legal information.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+                  <Link to="/waitlist">
                     <Button data-testid="laws-users-cta">
                       <Users className="w-4 h-4 mr-2" />
                       Join Waitlist (Users)
                     </Button>
-                  </a>
-                  <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+                  </Link>
+                  <Link to="/lawyers-join">
                     <Button variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50">
                       <Scale className="w-4 h-4 mr-2" />
                       I'm a Lawyer
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
