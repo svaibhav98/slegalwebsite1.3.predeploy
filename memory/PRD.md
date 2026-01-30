@@ -1,135 +1,83 @@
 # SunoLegal (NyayAI) - Product Requirements Document
 
 ## Original Problem Statement
-Build the official website for SunoLegal (NyayAI) — an AI-powered legal assistance platform for India. The website communicates:
-- AI legal guidance via NyayAI
-- Legal document generation
-- Verified lawyer consultations
-- Case tracking
-- India-specific laws & government schemes
+Build the official website for SunoLegal (NyayAI) — an AI-powered legal assistance platform for India.
 
-Target users: Indian citizens, freelancers, MSMEs, tenants/property buyers, lawyers
+## Updates Applied (Jan 30, 2026 - Phase 2)
 
-## User Personas
+### 1. Logo Replacement
+- ✅ User's logo applied globally (navbar, footer, popup, about page)
+- Logo URL: https://customer-assets.emergentagent.com/job_lawbuddy-9/artifacts/ib924i4i_Logo.png
 
-### 1. Everyday Citizen
-- Needs simple legal guidance in plain language
-- May have tenant issues, consumer complaints, or RTI queries
-- Price-sensitive, prefers affordable options
+### 2. Location
+- ✅ Set to "Mumbai, India" in footer and About page
 
-### 2. Freelancer/MSME Owner
-- Requires contract templates (NDA, service agreements)
-- Needs quick document generation
-- Values time-efficiency
+### 3. Waitlist Popup Modal
+- ✅ Shows on first homepage visit with 2-second delay
+- ✅ Contains "Join Waitlist (Users)" and "I'm a Lawyer" buttons
+- ✅ "Not now" button dismisses popup
+- ✅ 7-day dismissal rule via localStorage
+- ✅ Mobile responsive
 
-### 3. Tenant/Property Buyer
-- Looking for rent agreement templates
-- Wants to understand tenant rights
-- May need lawyer consultation for disputes
+### 4. Multiple Waitlist Access Points
+- ✅ **Navbar**: "Join Waitlist" + "For Lawyers" buttons (always visible)
+- ✅ **Footer**: "Get Early Access" section with both buttons
+- ✅ **Dedicated /waitlist page**: Two cards for Users and Lawyers
+- ✅ **Hero section**: Both buttons + "I'm a Lawyer" text link
+- ✅ **All CTA sections**: Both buttons available
 
-### 4. Lawyer
-- Wants to expand client base via platform
-- Needs verification process for credibility
-- Interested in flexible consultation scheduling
+### 5. New Pages Added
+- ✅ **/pricing**: Free + Professional (Coming Soon ₹299/mo) plans
+- ✅ **/laws-and-schemes**: Law category cards (Consumer, Property, Employment, Family, MSME, RTI)
+- ✅ **/faq**: 8 accordion FAQ items with CTAs
+- ✅ **/about** (updated): Founder story section added
 
-## Core Requirements (Static)
+### 6. Hero/Banner Gradient Fix
+- ✅ Lightened from pure black to slate-800 → slate-900 gradient
+- ✅ Added subtle amber glow accents
+- ✅ More premium, modern appearance
 
-### Functional Requirements
-1. **Multi-page informational website** with professional UI
-2. **NyayAI Chat Demo** - Interactive mockup with sample responses
-3. **Document Templates Showcase** - Rent Agreement, NDA, Legal Notice, etc.
-4. **Lawyer Marketplace Preview** - Searchable lawyer directory with filters
-5. **Waitlist System** - Email collection with database storage
-6. **Privacy & Disclaimer** - Legal compliance content
+### 7. Existing Features Preserved
+- ✅ Find Lawyer page working
+- ✅ NyayAI chat demo working
+- ✅ Documents page working
+- ✅ For Lawyers info page working
+- ✅ Case Tracker page working
+- ✅ Privacy page working
 
-### Non-Functional Requirements
-- Mobile-first responsive design
-- Mixed theme (dark hero + light content)
-- Amber/gold accent colors
-- Fast page loads
-- Accessibility compliance
+## Google Form URLs
+- **Users Waitlist**: https://docs.google.com/forms/d/e/1FAIpQLScNPCWdYMLW1vXmZhsL3NTxu8VJxEtAQq40iWjn1wNGB5K7cQ/viewform
+- **Lawyers Registration**: https://docs.google.com/forms/d/e/1FAIpQLSet8323DrdZSHRn5pVONUmz1yuiPBbxjiZwJ_un4XQWGkJm2A/viewform
 
-## What's Been Implemented (Jan 30, 2026)
+## Pages & Routes
+| Route | Page | Status |
+|-------|------|--------|
+| / | Home | ✅ Working |
+| /nyayai | NyayAI Chat Demo | ✅ Working |
+| /documents | Document Templates | ✅ Working |
+| /find-lawyer | Lawyer Directory | ✅ Working |
+| /for-lawyers | Lawyer Info | ✅ Working |
+| /case-tracker | Case Tracker Info | ✅ Working |
+| /about | About + Founder Story | ✅ Working |
+| /waitlist | Early Access Page | ✅ Working |
+| /pricing | Pricing Plans | ✅ NEW |
+| /laws-and-schemes | Laws & Schemes | ✅ NEW |
+| /faq | FAQ | ✅ NEW |
+| /privacy | Privacy & Disclaimer | ✅ Working |
 
-### Frontend (React + Tailwind + shadcn/ui)
-- ✅ Home page with hero, features, trust section, CTA
-- ✅ NyayAI page with interactive chat demo (demo responses)
-- ✅ Documents page with template showcase
-- ✅ Find Lawyer page with searchable directory + filters
-- ✅ For Lawyers page with benefits and application info
-- ✅ Case Tracker page with feature explanation
-- ✅ About page with mission and values
-- ✅ Waitlist page with form submission
-- ✅ Privacy page with disclaimer and policies
-- ✅ Responsive navigation and footer
+## Technical Stack
+- Frontend: React 18 + Tailwind CSS + shadcn/ui + Framer Motion
+- Backend: FastAPI with mock Firestore
+- Forms: Google Forms (external)
 
-### Backend (FastAPI + Mock Firestore)
-- ✅ Health check endpoint
-- ✅ Waitlist API with database storage
-- ✅ Lawyers API with filtering
-- ✅ Laws/Schemes API
-- ✅ Document generation API (PDF)
-- ✅ Chat API (with Emergent LLM)
-- ✅ User profile API
-- ✅ Cases API
-- ✅ Booking API
-
-### Design Implementation
-- ✅ "Golden Justice" color palette
-- ✅ Merriweather + Manrope typography
-- ✅ Bento grid layouts
-- ✅ Framer Motion animations
-- ✅ Dark hero sections + light content areas
-- ✅ Amber/gold CTAs with glow effect
-
-## Prioritized Backlog
-
-### P0 (Must Have - Next Phase)
-- [ ] Real LLM integration for NyayAI chat
-- [ ] User authentication (JWT or OAuth)
-- [ ] Actual payment integration (Razorpay)
-- [ ] Email notification system (Resend API key needed)
-
-### P1 (Should Have)
-- [ ] Mobile app (React Native - existing codebase at frontend_mobile_backup/)
-- [ ] Real-time chat with lawyers
-- [ ] Case management dashboard
-- [ ] Document storage and management
-
-### P2 (Nice to Have)
-- [ ] Multi-language support (Hindi, regional languages)
-- [ ] Voice input for NyayAI
-- [ ] Video consultation integration
-- [ ] Lawyer rating and review system
-
-## Technical Architecture
-
-### Frontend
-- Framework: React 18
-- Styling: Tailwind CSS + shadcn/ui
-- Animation: Framer Motion
-- Routing: React Router v6
-
-### Backend
-- Framework: FastAPI
-- Database: MongoDB (mock Firestore for now)
-- PDF: ReportLab
-- LLM: Emergent Integrations
-- Email: Resend (pending API key)
-
-### Deployment
-- Platform: Emergent Labs
-- Frontend: Port 3000
-- Backend: Port 8001
-- Database: MongoDB local
-
-## Next Action Items
-
-1. **Add Resend API Key** - Enable email notifications for waitlist
-2. **Configure real Firebase** - Replace mock Firestore with production database
-3. **Enable Razorpay** - Activate payment processing for lawyer bookings
-4. **Mobile App Integration** - Connect existing React Native app to backend
-5. **Analytics** - Add tracking for user engagement and conversion
+## Waitlist Access Points Summary
+1. Popup modal (first visit, 7-day cookie)
+2. Navbar buttons (always visible)
+3. Footer "Get Early Access" section
+4. /waitlist page (dedicated)
+5. Hero section buttons
+6. CTA sections on every page
+7. "I'm a Lawyer" secondary links throughout
 
 ---
 Last Updated: January 30, 2026
