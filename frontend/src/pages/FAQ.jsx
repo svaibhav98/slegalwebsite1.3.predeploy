@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { 
@@ -13,7 +14,6 @@ import {
   Users,
   Scale
 } from 'lucide-react';
-import { FORMS } from '../components/WaitlistPopup';
 
 const faqs = [
   {
