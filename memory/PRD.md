@@ -72,6 +72,7 @@ Build the official website for SunoLegal (NyayAI) — an AI-powered legal assist
 | /pricing | Pricing Plans | ✅ Working |
 | /laws-and-schemes | Laws & Schemes | ✅ Working |
 | /faq | FAQ | ✅ Working |
+| /lawyers-join | Lawyer Registration | ✅ Working |
 | /privacy | Privacy & Disclaimer | ✅ Working |
 
 ## Technical Stack
