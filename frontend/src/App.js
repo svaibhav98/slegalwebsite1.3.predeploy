@@ -20,6 +20,7 @@ import Privacy from './pages/Privacy';
 import Pricing from './pages/Pricing';
 import LawsAndSchemes from './pages/LawsAndSchemes';
 import FAQ from './pages/FAQ';
+import LawyersJoin from './pages/LawyersJoin';
 
 // Scroll to top on route change
 function ScrollToTop() {
