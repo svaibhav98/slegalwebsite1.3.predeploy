@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { 
   FileText, 
   Download, 
-  CheckCircle2,
   ArrowRight,
   Home,
   Briefcase,
