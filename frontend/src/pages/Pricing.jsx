@@ -117,17 +117,12 @@ export default function Pricing() {
                         {plan.cta}
                       </Button>
                     ) : (
-                      <a 
-                        href={FORMS.users}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block"
-                      >
+                      <Link to="/waitlist" className="block">
                         <Button className="w-full h-12">
                           {plan.cta}
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
-                      </a>
+                      </Link>
                     )}
                   </CardContent>
                 </Card>
