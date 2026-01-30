@@ -159,18 +159,18 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="pt-4 space-y-2 border-t">
-              <a href={FORMS.users} target="_blank" rel="noopener noreferrer" className="block">
+              <Link to="/waitlist" className="block">
                 <Button className="w-full" data-testid="mobile-join-waitlist-btn">
                   <Users className="w-4 h-4 mr-2" />
                   Join Waitlist (Users)
                 </Button>
-              </a>
-              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer" className="block">
+              </Link>
+              <Link to="/lawyers-join" className="block">
                 <Button variant="outline" className="w-full border-amber-200 text-amber-700">
                   <Scale className="w-4 h-4 mr-2" />
                   For Lawyers
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
