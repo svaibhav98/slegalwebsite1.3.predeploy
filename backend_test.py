@@ -518,6 +518,8 @@ def test_waitlist_api():
                 print_error(f"Response text: {response.text[:200]}")
     
     return success_count == total_tests
+
+def test_user_profile_api():
     """Test user profile endpoints"""
     print_test_header("User Profile API")
     
