@@ -55,6 +55,7 @@ function AppContent() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/laws-and-schemes" element={<LawsAndSchemes />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/lawyers-join" element={<LawyersJoin />} />
         </Routes>
       </main>
       <Footer />
