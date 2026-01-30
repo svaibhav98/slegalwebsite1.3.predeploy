@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Mail, MapPin, Users, Scale, ArrowRight } from 'lucide-react';
-import { FORMS } from './WaitlistPopup';
 
 const footerLinks = {
   product: [
