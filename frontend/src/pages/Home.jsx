@@ -74,6 +74,45 @@ const userTypes = [
 ];
 
 export default function Home() {
+  const [waitlistCount, setWaitlistCount] = useState(null);
+  const [lawyerCount, setLawyerCount] = useState(null);
+
+  useEffect(() => {
+    // Fetch waitlist counts
+    const fetchCounts = async () => {
+      try {
+        const [userRes, lawyerRes] = await Promise.all([
+          fetch(`${API_URL}/api/waitlist/count`),
+          fetch(`${API_URL}/api/lawyer-interest/count`)
+        ]);
+        
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setWaitlistCount(userData.count || 0);
+        }
+        if (lawyerRes.ok) {
+          const lawyerData = await lawyerRes.json();
+          setLawyerCount(lawyerData.count || 0);
+        }
+      } catch (error) {
+        console.log('Could not fetch counts');
+      }
+    };
+    
+    fetchCounts();
+  }, []);
+
+  // Format count for display (e.g., 150+ early adopters)
+  const formatCount = (count) => {
+    if (count === null) return null;
+    if (count < 10) return `${count}`;
+    // Round down to nearest 10 and add +
+    const rounded = Math.floor(count / 10) * 10;
+    return `${rounded}+`;
+  };
+
+  const totalCount = (waitlistCount || 0) + (lawyerCount || 0);
+
   return (
     <div className="overflow-hidden">
       {/* Hero Section - Updated Gradient */}
