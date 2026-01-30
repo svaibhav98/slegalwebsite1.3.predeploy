@@ -29,8 +29,26 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 # LLM Integration
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+# Email Integration
+import resend
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Load environment variables
 load_dotenv()
+
+# Initialize Resend
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "onboarding@resend.dev")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@sunolegal.in")
+
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
+    print("✅ Resend email configured")
+else:
+    print("🔶 Resend not configured - emails will be skipped")
 
 # ============= UID-BASED RATE LIMITER SETUP =============
 # Custom key function: Use UID for authenticated users, IP for guests
