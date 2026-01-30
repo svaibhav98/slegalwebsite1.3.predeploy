@@ -97,7 +97,7 @@ export default function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-2">
-            <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+            <Link to="/waitlist">
               <Button 
                 data-testid="nav-join-waitlist-btn"
                 size="sm"
@@ -106,8 +106,8 @@ export default function Navbar() {
                 <Users className="w-4 h-4 mr-1" />
                 Join Waitlist
               </Button>
-            </a>
-            <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+            </Link>
+            <Link to="/lawyers-join">
               <Button 
                 data-testid="nav-for-lawyers-btn"
                 variant="outline"
@@ -121,7 +121,7 @@ export default function Navbar() {
                 <Scale className="w-4 h-4 mr-1" />
                 For Lawyers
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
