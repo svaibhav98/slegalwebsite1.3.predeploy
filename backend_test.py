@@ -592,6 +592,7 @@ def run_all_tests():
     test_results['Chat API'] = test_chat_api()
     test_results['Booking API'] = test_booking_api()
     test_results['Cases API'] = test_cases_api()
+    test_results['Waitlist API'] = test_waitlist_api()
     test_results['User Profile API'] = test_user_profile_api()
     
     # Print summary
