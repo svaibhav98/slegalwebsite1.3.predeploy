@@ -126,7 +126,7 @@ export default function Home() {
                     data-testid="join-waitlist-hero-btn"
                     variant="outline" 
                     size="lg"
-                    className="w-full sm:w-auto border-slate-600 text-white hover:bg-slate-800"
+                    className="w-full sm:w-auto border-slate-500 text-white bg-transparent hover:bg-white/10"
                   >
                     Join Waitlist
                   </Button>
