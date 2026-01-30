@@ -15,6 +15,7 @@ Build the official website for SunoLegal (NyayAI) — an AI-powered legal assist
 - ✅ **Footer CTAs**: Updated to use `Link` to internal routes
 - ✅ **Hero Section CTAs**: Updated to navigate internally
 - ✅ **All Page CTAs**: Pricing, FAQ, About, ForLawyers all updated
+- ✅ **Live Waitlist Counter**: Added social proof counter on homepage showing "X+ early adopters joined"
 
 ### Phase 2 Changes
 - ✅ User's logo applied globally (navbar, footer, popup, about page)
