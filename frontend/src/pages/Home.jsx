@@ -184,6 +184,35 @@ export default function Home() {
                 </Link>
               </div>
               
+              {/* Live Waitlist Counter */}
+              {totalCount > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-6"
+                  data-testid="waitlist-counter"
+                >
+                  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <div className="flex -space-x-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border-2 border-slate-900 flex items-center justify-center"
+                        >
+                          <Users className="w-3 h-3 text-white" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4 text-green-400" />
+                      <span className="text-white font-semibold">{formatCount(totalCount)}</span>
+                      <span className="text-slate-400 text-sm">early adopters joined</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
               {/* Trust Indicators */}
               <div className="flex items-center gap-6 mt-10 pt-10 border-t border-slate-700/50">
                 <div className="flex items-center gap-2">
