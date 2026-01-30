@@ -96,16 +96,16 @@ const cities = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata', 'Pune', 'H
 
 export default function FindLawyer() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpecialization, setSelectedSpecialization] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedSpecialization, setSelectedSpecialization] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('all');
 
   const filteredLawyers = sampleLawyers.filter(lawyer => {
     const matchesSearch = !searchQuery || 
       lawyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lawyer.specialization.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesSpec = !selectedSpecialization || 
+    const matchesSpec = selectedSpecialization === 'all' || 
       lawyer.specialization.includes(selectedSpecialization);
-    const matchesCity = !selectedCity || lawyer.city === selectedCity;
+    const matchesCity = selectedCity === 'all' || lawyer.city === selectedCity;
     return matchesSearch && matchesSpec && matchesCity;
   });
 
