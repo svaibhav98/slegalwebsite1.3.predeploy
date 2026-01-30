@@ -4,13 +4,16 @@ import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { 
-  Scale, 
   Target, 
   Heart,
   Users,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  Scale,
+  Quote,
+  MapPin
 } from 'lucide-react';
+import { FORMS } from '../components/WaitlistPopup';
 
 const values = [
   {
@@ -42,8 +45,10 @@ export default function About() {
   return (
     <div className="min-h-screen bg-light pt-20">
       {/* Header */}
-      <section className="bg-dark grain-overlay relative py-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800" />
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute top-10 right-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
+        
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -61,12 +66,77 @@ export default function About() {
               SunoLegal is building India's most accessible legal assistance platform, 
               powered by AI and backed by verified lawyers.
             </p>
+            <div className="flex items-center gap-2 mt-6 text-slate-400">
+              <MapPin className="w-4 h-4" />
+              <span>Mumbai, India</span>
+            </div>
           </motion.div>
         </div>
       </section>
 
+      {/* Founder Story */}
+      <section data-testid="founder-story" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <Quote className="w-12 h-12 text-amber-200 mb-6" />
+              <h2 className="text-3xl md:text-4xl font-semibold font-heading text-slate-900 mb-6">
+                The Story Behind SunoLegal
+              </h2>
+              <div className="space-y-4 text-slate-600 leading-relaxed">
+                <p>
+                  The idea for SunoLegal was born from a personal experience. Like many Indians, 
+                  I once faced a legal situation where I didn't know my rights, couldn't afford 
+                  a lawyer, and couldn't understand the complex legal jargon.
+                </p>
+                <p>
+                  I realized that millions of Indians face this same problem every day. Whether 
+                  it's a tenant who doesn't know their rights, a small business owner navigating 
+                  contracts, or someone filing an RTI – legal help seemed out of reach.
+                </p>
+                <p>
+                  That's when I decided to build SunoLegal – a platform that uses AI to simplify 
+                  legal information, makes verified lawyers accessible, and empowers every Indian 
+                  to understand and exercise their legal rights.
+                </p>
+                <p className="font-medium text-slate-900">
+                  Our mission is simple: Legal clarity for all.
+                </p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl p-8">
+                <div className="w-20 h-20 mb-6">
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_lawbuddy-9/artifacts/ib924i4i_Logo.png" 
+                    alt="SunoLegal"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">SunoLegal</h3>
+                <p className="text-slate-600 mb-4">NyayAI Powered Legal Assistant</p>
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <MapPin className="w-4 h-4" />
+                  <span>Mumbai, India</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Mission */}
-      <section data-testid="mission-section" className="py-20 bg-white">
+      <section data-testid="mission-section" className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -108,7 +178,7 @@ export default function About() {
       </section>
 
       {/* The Problem */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -124,7 +194,7 @@ export default function About() {
             </h2>
           </motion.div>
 
-          <Card className="max-w-3xl mx-auto">
+          <Card className="max-w-3xl mx-auto border-0 shadow-float">
             <CardContent className="p-8">
               <div className="space-y-4">
                 {problems.map((problem, index) => (
@@ -149,7 +219,7 @@ export default function About() {
       </section>
 
       {/* Our Values */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -174,7 +244,7 @@ export default function About() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="h-full text-center">
+                <Card className="h-full text-center border-0 shadow-card">
                   <CardContent className="p-8">
                     <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-6">
                       <value.icon className="w-8 h-8 text-amber-700" />
@@ -190,8 +260,10 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-dark grain-overlay relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800" />
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+        
         <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 lg:px-24 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -204,12 +276,24 @@ export default function About() {
             <p className="text-slate-300 mb-8">
               Be among the first to experience SunoLegal. Sign up for early access today.
             </p>
-            <Link to="/waitlist">
-              <Button size="lg" data-testid="about-cta-btn">
-                Join Waitlist
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+                <Button size="lg" data-testid="about-users-cta">
+                  <Users className="w-4 h-4 mr-2" />
+                  Join Waitlist (Users)
+                </Button>
+              </a>
+              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-slate-500 text-white bg-transparent hover:bg-white/10"
+                >
+                  <Scale className="w-4 h-4 mr-2" />
+                  I'm a Lawyer
+                </Button>
+              </a>
+            </div>
           </motion.div>
         </div>
       </section>

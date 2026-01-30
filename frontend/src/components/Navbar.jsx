@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, Scale } from 'lucide-react';
+import { Menu, X, Users, Scale } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { FORMS } from './WaitlistPopup';
 
 const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'NyayAI', path: '/nyayai' },
   { name: 'Documents', path: '/documents' },
   { name: 'Find Lawyer', path: '/find-lawyer' },
-  { name: 'For Lawyers', path: '/for-lawyers' },
+  { name: 'Pricing', path: '/pricing' },
   { name: 'About', path: '/about' },
 ];
 
@@ -43,7 +44,7 @@ export default function Navbar() {
           : "bg-transparent"
       )}
     >
-      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link 
@@ -51,11 +52,12 @@ export default function Navbar() {
             className="flex items-center gap-2"
             data-testid="logo-link"
           >
-            <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center",
-              isDarkNav ? "bg-amber-600" : "bg-amber-600"
-            )}>
-              <Scale className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_lawbuddy-9/artifacts/ib924i4i_Logo.png" 
+                alt="SunoLegal"
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className={cn(
               "text-xl font-bold font-heading",
@@ -66,14 +68,14 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 data-testid={`nav-${link.name.toLowerCase().replace(' ', '-')}`}
                 className={cn(
-                  "px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   location.pathname === link.path
                     ? isDarkNav
                       ? "text-amber-400 bg-white/10"
@@ -88,22 +90,39 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Link to="/waitlist">
+          {/* CTA Buttons */}
+          <div className="hidden lg:flex items-center gap-2">
+            <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
               <Button 
-                data-testid="join-waitlist-nav-btn"
+                data-testid="nav-join-waitlist-btn"
+                size="sm"
                 className="shadow-lg hover:shadow-glow"
               >
+                <Users className="w-4 h-4 mr-1" />
                 Join Waitlist
               </Button>
-            </Link>
+            </a>
+            <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+              <Button 
+                data-testid="nav-for-lawyers-btn"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  isDarkNav 
+                    ? "border-slate-500 text-white bg-transparent hover:bg-white/10" 
+                    : "border-amber-200 text-amber-700 hover:bg-amber-50"
+                )}
+              >
+                <Scale className="w-4 h-4 mr-1" />
+                For Lawyers
+              </Button>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             data-testid="mobile-menu-btn"
-            className="md:hidden p-2"
+            className="lg:hidden p-2"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? (
@@ -117,8 +136,8 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white border-t shadow-lg">
-          <div className="px-6 py-4 space-y-2">
+        <div className="lg:hidden bg-white border-t shadow-lg">
+          <div className="px-4 py-4 space-y-2">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -134,12 +153,19 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <div className="pt-2">
-              <Link to="/waitlist" className="block">
+            <div className="pt-4 space-y-2 border-t">
+              <a href={FORMS.users} target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full" data-testid="mobile-join-waitlist-btn">
-                  Join Waitlist
+                  <Users className="w-4 h-4 mr-2" />
+                  Join Waitlist (Users)
                 </Button>
-              </Link>
+              </a>
+              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer" className="block">
+                <Button variant="outline" className="w-full border-amber-200 text-amber-700">
+                  <Scale className="w-4 h-4 mr-2" />
+                  For Lawyers
+                </Button>
+              </a>
             </div>
           </div>
         </div>
