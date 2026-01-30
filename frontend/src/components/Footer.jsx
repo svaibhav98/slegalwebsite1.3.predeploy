@@ -126,26 +126,22 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
               <li>
-                <a 
-                  href={FORMS.users}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link 
+                  to="/waitlist"
                   className="text-sm hover:text-amber-400 transition-colors flex items-center gap-1"
                 >
                   Users Waitlist
                   <ArrowRight className="w-3 h-3" />
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href={FORMS.lawyers}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link 
+                  to="/lawyers-join"
                   className="text-sm hover:text-amber-400 transition-colors flex items-center gap-1"
                 >
                   Lawyers Registration
                   <ArrowRight className="w-3 h-3" />
-                </a>
+                </Link>
               </li>
               <li>
                 <Link 
