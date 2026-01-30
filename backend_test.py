@@ -104,8 +104,9 @@ def test_lawyers_api():
     response = make_request('GET', '/lawyers/list')
     if response and response.status_code == 200:
         data = response.json()
-        if data.get('success') and len(data.get('lawyers', [])) > 0:
-            print_success(f"Found {len(data['lawyers'])} lawyers")
+        lawyers = data.get('items', data.get('lawyers', []))
+        if data.get('success') and len(lawyers) > 0:
+            print_success(f"Found {len(lawyers)} lawyers")
             success_count += 1
         else:
             print_error("No lawyers found or invalid response")
