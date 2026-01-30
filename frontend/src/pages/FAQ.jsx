@@ -10,7 +10,6 @@ import {
 } from '../components/ui/accordion';
 import { 
   HelpCircle, 
-  Sparkles,
   Users,
   Scale
 } from 'lucide-react';
