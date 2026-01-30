@@ -117,7 +117,7 @@ export default function Home() {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+                <Link to="/waitlist">
                   <Button 
                     data-testid="join-waitlist-hero-btn"
                     variant="outline" 
@@ -127,21 +127,19 @@ export default function Home() {
                     <Users className="w-5 h-5 mr-2" />
                     Join Waitlist
                   </Button>
-                </a>
+                </Link>
               </div>
               
               {/* Secondary CTA */}
               <div className="mt-4">
-                <a 
-                  href={FORMS.lawyers} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <Link 
+                  to="/lawyers-join"
                   className="inline-flex items-center text-sm text-slate-400 hover:text-amber-400 transition-colors"
                 >
                   <Scale className="w-4 h-4 mr-2" />
                   I'm a Lawyer – Join Early
                   <ArrowRight className="w-3 h-3 ml-1" />
-                </a>
+                </Link>
               </div>
               
               {/* Trust Indicators */}
