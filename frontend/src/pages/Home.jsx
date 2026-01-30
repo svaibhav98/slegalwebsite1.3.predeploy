@@ -371,18 +371,18 @@ export default function Home() {
               Get early access to the app.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={FORMS.users} target="_blank" rel="noopener noreferrer">
+              <Link to="/waitlist">
                 <Button size="lg" data-testid="cta-users-btn">
                   <Users className="w-5 h-5 mr-2" />
                   Join Waitlist (Users)
                 </Button>
-              </a>
-              <a href={FORMS.lawyers} target="_blank" rel="noopener noreferrer">
+              </Link>
+              <Link to="/lawyers-join">
                 <Button variant="outline" size="lg" data-testid="cta-lawyers-btn" className="border-amber-200 text-amber-700 hover:bg-amber-50">
                   <Scale className="w-5 h-5 mr-2" />
                   I'm a Lawyer
                 </Button>
-              </a>
+              </Link>
             </div>
           </motion.div>
         </div>
