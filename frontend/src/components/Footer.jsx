@@ -30,7 +30,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-xl font-semibold text-white mb-1">Get Early Access</h3>
-              <p className="text-slate-400 text-sm">Join the waitlist and help shape India's legal clarity platform</p>
+              <p className="text-slate-400 text-sm">Join the waitlist and help shape India&apos;s legal clarity platform</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/waitlist">
