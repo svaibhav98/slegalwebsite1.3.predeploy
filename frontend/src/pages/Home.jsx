@@ -255,21 +255,37 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" />
               </div>
               
-              {/* Floating Verified Lawyer Card - Repositioned */}
+              {/* Floating Trust Badge - 3 User-Focused Trust Points */}
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
-                className="absolute -bottom-4 -right-4 bg-white rounded-xl p-4 shadow-float"
+                className="absolute -bottom-6 -right-4 bg-white rounded-xl p-4 shadow-float max-w-xs"
                 data-testid="verified-lawyer-badge"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <div className="space-y-3">
+                  {/* Trust Point 1 */}
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Verified Lawyers</p>
+                      <p className="text-xs text-slate-500">Trusted early partners</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">Verified Lawyers</p>
-                    <p className="text-xs text-slate-500">Trusted Early Partners</p>
+                  {/* Trust Point 2 */}
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Built for Real Indian Legal Needs</p>
+                    </div>
+                  </div>
+                  {/* Trust Point 3 */}
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">One Place for Your Legal Journey</p>
+                      <p className="text-xs text-slate-500">Helping reduce confusion and friction</p>
+                    </div>
                   </div>
                 </div>
               </motion.div>
