@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Mail, MapPin, Users, Scale, ArrowRight } from 'lucide-react';
+import { Mail, MapPin, Users, Scale, ArrowRight, Phone } from 'lucide-react';
 
 const footerLinks = {
   product: [
@@ -17,6 +17,7 @@ const footerLinks = {
     { name: 'FAQ', path: '/faq' },
     { name: 'Join Waitlist', path: '/waitlist' },
     { name: 'Privacy Policy', path: '/privacy' },
+    { name: 'Contact Us', path: '/contact' },
   ],
 };
 
@@ -41,7 +42,7 @@ export default function Footer() {
               <Link to="/lawyers-join">
                 <Button 
                   variant="outline" 
-                  className="w-full sm:w-auto border-slate-600 text-white hover:bg-slate-800"
+                  className="w-full sm:w-auto border-green-600 bg-green-900/30 text-green-400 hover:bg-green-800/40 hover:text-green-300"
                   data-testid="footer-lawyers-btn"
                 >
                   <Scale className="w-4 h-4 mr-2" />
@@ -74,11 +75,20 @@ export default function Footer() {
             </p>
             <div className="space-y-3">
               <a 
-                href="mailto:contact@sunolegal.in" 
+                href="tel:469-592-2133"
                 className="flex items-center gap-2 text-sm hover:text-amber-400 transition-colors"
+                data-testid="footer-phone"
+              >
+                <Phone className="w-4 h-4" />
+                469-592-2133
+              </a>
+              <a 
+                href="mailto:singhvaibhav9815@gmail.com" 
+                className="flex items-center gap-2 text-sm hover:text-amber-400 transition-colors"
+                data-testid="footer-email"
               >
                 <Mail className="w-4 h-4" />
-                contact@sunolegal.in
+                singhvaibhav9815@gmail.com
               </a>
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4" />
@@ -113,6 +123,7 @@ export default function Footer() {
                   <Link 
                     to={link.path}
                     className="text-sm hover:text-amber-400 transition-colors"
+                    data-testid={link.name === 'Contact Us' ? 'footer-contact-link' : undefined}
                   >
                     {link.name}
                   </Link>
@@ -149,6 +160,16 @@ export default function Footer() {
                   className="text-sm hover:text-amber-400 transition-colors"
                 >
                   For Lawyers Info
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/contact"
+                  className="text-sm hover:text-amber-400 transition-colors flex items-center gap-1"
+                  data-testid="footer-contact-quick-link"
+                >
+                  Contact Us
+                  <ArrowRight className="w-3 h-3" />
                 </Link>
               </li>
             </ul>
