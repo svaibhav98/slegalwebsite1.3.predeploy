@@ -75,7 +75,7 @@ const sampleLawyers = [
     rating: 4.6,
     reviews: 95,
     verified: true,
-    image: 'https://customer-assets.emergentagent.com/job_verified-lawyer-fix/artifacts/32pcz4z0_5186240651819944777.jpg'
+    image: 'https://images.unsplash.com/photo-1538978939284-4ecb3939e05e?w=400&h=400&fit=crop'
   }
 ];
 
