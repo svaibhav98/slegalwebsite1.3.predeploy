@@ -269,7 +269,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">Verified Lawyers</p>
-                    <p className="text-xs text-slate-500">4,500+ experts nationwide</p>
+                    <p className="text-xs text-slate-500">Trusted Early Partners</p>
                   </div>
                 </div>
               </motion.div>

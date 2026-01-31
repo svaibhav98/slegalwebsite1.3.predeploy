@@ -15,6 +15,7 @@ const navLinks = [
   { name: 'NyayAI', path: '/nyayai' },
   { name: 'Documents', path: '/documents' },
   { name: 'Find Lawyer', path: '/find-lawyer' },
+  { name: 'For Lawyers', path: '/for-lawyers' },
   { name: 'Pricing', path: '/pricing' },
   { name: 'About', path: '/about' },
 ];
