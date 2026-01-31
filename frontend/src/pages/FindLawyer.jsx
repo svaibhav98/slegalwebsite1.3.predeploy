@@ -36,7 +36,7 @@ const sampleLawyers = [
     rating: 4.9,
     reviews: 210,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1606472171079-8c28cee65102?w=400&h=400&fit=crop'
   },
   {
     id: 'lawyer_2',
@@ -49,7 +49,7 @@ const sampleLawyers = [
     rating: 4.8,
     reviews: 180,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1671450960874-0903baf942c5?w=400&h=400&fit=crop'
   },
   {
     id: 'lawyer_3',
@@ -62,7 +62,7 @@ const sampleLawyers = [
     rating: 4.7,
     reviews: 150,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1762341113148-41a938d2e957?w=400&h=400&fit=crop'
   },
   {
     id: 'lawyer_4',
@@ -75,7 +75,7 @@ const sampleLawyers = [
     rating: 4.6,
     reviews: 95,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1749102166798-5ba7f3907279?w=400&h=400&fit=crop'
   }
 ];
 
