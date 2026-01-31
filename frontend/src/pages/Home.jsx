@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -16,7 +16,8 @@ import {
   Building2,
   Home as HomeIcon,
   Briefcase,
-  TrendingUp
+  TrendingUp,
+  ClipboardList
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -61,9 +62,10 @@ const features = [
 
 const steps = [
   { number: "01", title: "Ask Your Question", description: "Type your legal question in plain language" },
-  { number: "02", title: "Get AI Guidance", description: "NyayAI provides simplified explanations" },
+  { number: "02", title: "Get AI Guidance (NyayAI)", description: "NyayAI provides simplified explanations" },
   { number: "03", title: "Generate Documents", description: "Create legal documents if needed" },
-  { number: "04", title: "Consult a Lawyer", description: "Connect with verified experts for advice" }
+  { number: "04", title: "Consult a Lawyer (If Needed)", description: "Connect with verified experts for advice" },
+  { number: "05", title: "Track Your Cases", description: "All in One Place — stay organized" }
 ];
 
 const userTypes = [
@@ -74,6 +76,7 @@ const userTypes = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   const [waitlistCount, setWaitlistCount] = useState(null);
   const [lawyerCount, setLawyerCount] = useState(null);
 
@@ -132,11 +135,21 @@ export default function Home() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-32 md:py-40">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Hero Content */}
-            <motion.div {...fadeUp} className="text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium mb-6 border border-amber-500/30">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-left"
+            >
+              {/* NyayAI Badge - Clickable */}
+              <Link 
+                to="/nyayai"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium mb-6 border border-amber-500/30 hover:bg-amber-500/30 transition-all cursor-pointer"
+                data-testid="nyayai-hero-badge"
+              >
                 <Sparkles className="w-4 h-4" />
                 NyayAI Powered Legal Assistant
-              </div>
+              </Link>
               
               <h1 className="text-5xl md:text-7xl font-bold text-white font-heading tracking-tight leading-tight mb-6">
                 Legal Help,{' '}
@@ -226,23 +239,31 @@ export default function Home() {
               </div>
             </motion.div>
             
-            {/* Hero Image */}
+            {/* Hero Image - Updated with better positioning */}
             <motion.div 
-              {...fadeUp}
-              transition={{ delay: 0.2 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
               className="relative hidden lg:block"
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
                 <img 
-                  src="https://images.unsplash.com/photo-1737574994780-e31827afaed7?w=600&h=400&fit=crop"
-                  alt="Professional lawyer working"
-                  className="w-full h-auto"
+                  src="https://images.unsplash.com/photo-1551836022-4c4c79ecde51?w=600&h=400&fit=crop"
+                  alt="Professional legal consultation"
+                  className="w-full h-auto object-cover"
+                  data-testid="hero-image"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" />
               </div>
               
-              {/* Floating Card */}
-              <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-float">
+              {/* Floating Verified Lawyer Card - Repositioned */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="absolute -bottom-4 -right-4 bg-white rounded-xl p-4 shadow-float"
+                data-testid="verified-lawyer-badge"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                     <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -252,7 +273,7 @@ export default function Home() {
                     <p className="text-xs text-slate-500">4,500+ experts nationwide</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -265,32 +286,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works - Light */}
+      {/* How It Works - 5 Steps with Dark Green + Animation */}
       <section data-testid="how-it-works" className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-          <motion.div {...fadeUp} className="text-center mb-16">
+          <motion.div {...fadeUp} className="text-center mb-6">
             <span className="text-sm font-medium tracking-wide uppercase text-amber-600 mb-4 block">
               How It Works
             </span>
             <h2 className="text-4xl md:text-5xl font-semibold font-heading text-slate-900 tracking-tight">
-              Four Simple Steps
+              How It Works — All in One Place
             </h2>
           </motion.div>
           
-          <div className="grid md:grid-cols-4 gap-8">
+          <motion.p 
+            {...fadeUp}
+            className="text-center text-slate-600 mb-16 text-lg"
+          >
+            Simple steps. Clear direction.
+          </motion.p>
+          
+          {/* 5 Steps Grid */}
+          <div className="grid md:grid-cols-5 gap-6 relative">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-green-200 via-green-400 to-green-200 z-0" />
+            
             {steps.map((step, index) => (
               <motion.div
                 key={step.number}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
+                transition={{ delay: index * 0.15, duration: 0.5 }}
+                className="text-center relative z-10"
               >
-                <div className="text-6xl font-bold text-amber-200 font-heading mb-4">
-                  {step.number}
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
+                {/* Step Number - Dark Green */}
+                <motion.div 
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15 + 0.2, type: "spring", stiffness: 200 }}
+                  className="text-5xl md:text-6xl font-bold text-green-700 font-heading mb-4 relative inline-block"
+                >
+                  <span className="relative">
+                    {step.number}
+                    {/* Subtle background circle */}
+                    <span className="absolute -inset-2 bg-green-100 rounded-full -z-10 opacity-50" />
+                  </span>
+                </motion.div>
+                <h3 className="text-base font-semibold text-slate-900 mb-2">{step.title}</h3>
                 <p className="text-slate-600 text-sm">{step.description}</p>
               </motion.div>
             ))}
@@ -298,7 +341,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features - Bento Grid */}
+      {/* Features - Bento Grid with Fully Clickable Cards */}
       <section data-testid="features-section" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <motion.div {...fadeUp} className="text-center mb-16">
@@ -323,9 +366,14 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="h-full group cursor-pointer border-0 shadow-card hover:shadow-float transition-all">
+                {/* Entire Card is Clickable */}
+                <Card 
+                  className="h-full group cursor-pointer border-0 shadow-card hover:shadow-float hover:-translate-y-1 transition-all duration-300"
+                  onClick={() => navigate(feature.link)}
+                  data-testid={`feature-card-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}
+                >
                   <CardContent className="p-8">
-                    <div className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center mb-6`}>
+                    <div className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                       <feature.icon className="w-7 h-7" />
                     </div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-3 font-heading">
@@ -334,13 +382,10 @@ export default function Home() {
                     <p className="text-slate-600 mb-4 leading-relaxed">
                       {feature.description}
                     </p>
-                    <Link 
-                      to={feature.link}
-                      className="inline-flex items-center text-amber-600 font-medium group-hover:text-amber-700 transition-colors"
-                    >
+                    <span className="inline-flex items-center text-amber-600 font-medium group-hover:text-amber-700 transition-colors">
                       Learn more
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    </span>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -369,7 +414,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white p-6 rounded-xl border-0 shadow-card hover:shadow-float transition-all duration-300"
+                className="bg-white p-6 rounded-xl border-0 shadow-card hover:shadow-float hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
                   <type.icon className="w-6 h-6 text-amber-700" />
@@ -408,18 +453,25 @@ export default function Home() {
                   "GDPR compliant data handling",
                   "No hidden fees or surprise charges"
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                  <motion.div 
+                    key={i} 
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                  >
                     <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
                     <span className="text-slate-300">{item}</span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
             
             <motion.div {...fadeUp} transition={{ delay: 0.2 }} className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1730130596425-197566414dc4?w=600&h=400&fit=crop"
-                alt="Happy family at home"
+                src="https://images.unsplash.com/photo-1765020553552-6286dde23660?w=600&h=400&fit=crop"
+                alt="Professional legal consultation"
                 className="rounded-2xl shadow-2xl"
               />
             </motion.div>
