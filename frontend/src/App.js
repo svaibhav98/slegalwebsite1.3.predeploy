@@ -21,6 +21,7 @@ import Pricing from './pages/Pricing';
 import LawsAndSchemes from './pages/LawsAndSchemes';
 import FAQ from './pages/FAQ';
 import LawyersJoin from './pages/LawyersJoin';
+import Contact from './pages/Contact';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -56,6 +57,7 @@ function AppContent() {
           <Route path="/laws-and-schemes" element={<LawsAndSchemes />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/lawyers-join" element={<LawyersJoin />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
       <Footer />
