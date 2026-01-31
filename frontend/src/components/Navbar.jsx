@@ -96,7 +96,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Only Join Waitlist */}
           <div className="hidden lg:flex items-center gap-2">
             <Link to="/waitlist">
               <Button 
@@ -106,21 +106,6 @@ export default function Navbar() {
               >
                 <Users className="w-4 h-4 mr-1" />
                 Join Waitlist
-              </Button>
-            </Link>
-            <Link to="/lawyers-join">
-              <Button 
-                data-testid="nav-for-lawyers-btn"
-                variant="outline"
-                size="sm"
-                className={cn(
-                  isDarkNav 
-                    ? "border-slate-500 text-white bg-transparent hover:bg-white/10" 
-                    : "border-amber-200 text-amber-700 hover:bg-amber-50"
-                )}
-              >
-                <Scale className="w-4 h-4 mr-1" />
-                For Lawyers
               </Button>
             </Link>
           </div>
