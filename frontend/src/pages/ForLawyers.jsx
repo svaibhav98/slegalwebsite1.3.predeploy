@@ -95,8 +95,8 @@ export default function ForLawyers() {
               className="hidden lg:block"
             >
               <img 
-                src="https://images.unsplash.com/photo-1721379805142-faaa28ab1424?w=500&h=400&fit=crop"
-                alt="Legal professional"
+                src="https://images.unsplash.com/photo-1565688527174-775059ac429c?w=500&h=400&fit=crop"
+                alt="Indian legal professionals in meeting"
                 className="rounded-2xl shadow-2xl"
               />
             </motion.div>
