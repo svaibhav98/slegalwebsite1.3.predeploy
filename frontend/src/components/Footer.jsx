@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Mail, MapPin, Users, Scale, ArrowRight, Phone } from 'lucide-react';
+import { Mail, MapPin, Users, Scale, ArrowRight, Phone, Linkedin, MessageCircle } from 'lucide-react';
 
 const footerLinks = {
   product: [
@@ -95,6 +95,33 @@ export default function Footer() {
                 Mumbai, India
               </div>
             </div>
+            
+            {/* Social Media Links */}
+            <div className="mt-6">
+              <h5 className="text-white font-medium text-sm mb-3">Follow Us</h5>
+              <div className="flex items-center gap-3">
+                <a 
+                  href="https://linkedin.com/company/sunolegal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-amber-600 hover:text-white transition-all duration-300 hover:scale-110"
+                  data-testid="footer-linkedin"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="w-4 h-4" />
+                </a>
+                <a 
+                  href="https://wa.me/14695922133"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all duration-300 hover:scale-110"
+                  data-testid="footer-whatsapp"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Product Links */}
@@ -132,7 +159,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links - Removed duplicate Contact Us */}
           <div>
             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
@@ -162,16 +189,6 @@ export default function Footer() {
                   For Lawyers Info
                 </Link>
               </li>
-              <li>
-                <Link 
-                  to="/contact"
-                  className="text-sm hover:text-amber-400 transition-colors flex items-center gap-1"
-                  data-testid="footer-contact-quick-link"
-                >
-                  Contact Us
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
@@ -182,7 +199,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-slate-500">
-              © {new Date().getFullYear()} SunoLegal. All rights reserved.
+              © 2026 SunoLegal. All rights reserved.
             </p>
             <p className="text-xs text-slate-500 text-center md:text-right">
               NyayAI provides general legal information, not legal advice. 
