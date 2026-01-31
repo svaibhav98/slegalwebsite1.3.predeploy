@@ -62,7 +62,7 @@ export default function Privacy() {
             </CardHeader>
             <CardContent className="prose prose-slate max-w-none">
               <p className="text-slate-600 mb-4">
-                Last updated: January 2025
+                Last updated: January 2026
               </p>
 
               <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">
@@ -175,7 +175,7 @@ export default function Privacy() {
 
           {/* Last Updated */}
           <p className="text-center text-slate-500 text-sm">
-            These policies were last updated in January 2025 and may be updated periodically. 
+            These policies were last updated in January 2026 and may be updated periodically. 
             Please check back for any changes.
           </p>
         </div>
