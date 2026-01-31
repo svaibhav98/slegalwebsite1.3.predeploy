@@ -49,7 +49,7 @@ const sampleLawyers = [
     rating: 4.8,
     reviews: 180,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1671450960874-0903baf942c5?w=400&h=400&fit=crop'
+    image: 'https://customer-assets.emergentagent.com/job_verified-lawyer-fix/artifacts/32pcz4z0_5186240651819944777.jpg'
   },
   {
     id: 'lawyer_3',
@@ -75,7 +75,7 @@ const sampleLawyers = [
     rating: 4.6,
     reviews: 95,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1749102166798-5ba7f3907279?w=400&h=400&fit=crop'
+    image: 'https://customer-assets.emergentagent.com/job_verified-lawyer-fix/artifacts/32pcz4z0_5186240651819944777.jpg'
   }
 ];
 

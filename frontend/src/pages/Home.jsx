@@ -247,8 +247,8 @@ export default function Home() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
                 <img 
-                  src="https://images.unsplash.com/photo-1606472171079-8c28cee65102?w=600&h=400&fit=crop"
-                  alt="Indian professional lawyer at office"
+                  src="https://customer-assets.emergentagent.com/job_verified-lawyer-fix/artifacts/xrxmgu5p_5186240651819944778.jpg"
+                  alt="Indian legal consultation - SunoLegal"
                   className="w-full h-auto object-cover"
                   data-testid="hero-image"
                 />
