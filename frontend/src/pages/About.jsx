@@ -165,8 +165,8 @@ export default function About() {
               viewport={{ once: true }}
             >
               <img 
-                src="https://images.unsplash.com/photo-1730130596425-197566414dc4?w=600&h=400&fit=crop"
-                alt="Happy Indian family"
+                src="https://images.unsplash.com/photo-1659352791239-6a796c124088?w=600&h=400&fit=crop"
+                alt="Indian professionals in consultation"
                 className="rounded-2xl shadow-float"
               />
             </motion.div>
