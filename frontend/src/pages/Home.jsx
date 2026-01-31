@@ -247,8 +247,8 @@ export default function Home() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
                 <img 
-                  src="https://images.unsplash.com/photo-1551836022-4c4c79ecde51?w=600&h=400&fit=crop"
-                  alt="Professional legal consultation"
+                  src="https://images.unsplash.com/photo-1606472171079-8c28cee65102?w=600&h=400&fit=crop"
+                  alt="Indian professional lawyer at office"
                   className="w-full h-auto object-cover"
                   data-testid="hero-image"
                 />
@@ -469,8 +469,8 @@ export default function Home() {
             
             <motion.div {...fadeUp} transition={{ delay: 0.2 }} className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1765020553552-6286dde23660?w=600&h=400&fit=crop"
-                alt="Professional legal consultation"
+                src="https://images.unsplash.com/photo-1659352791239-6a796c124088?w=600&h=400&fit=crop"
+                alt="Indian family consultation meeting"
                 className="rounded-2xl shadow-2xl"
               />
             </motion.div>
