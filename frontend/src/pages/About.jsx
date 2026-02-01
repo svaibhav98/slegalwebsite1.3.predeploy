@@ -43,7 +43,7 @@ export default function About() {
     <div className="min-h-screen bg-light pt-20">
       {/* Header */}
       <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900" />
         <div className="absolute top-10 right-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
@@ -258,7 +258,7 @@ export default function About() {
 
       {/* CTA */}
       <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
         
         <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 lg:px-24 text-center">
