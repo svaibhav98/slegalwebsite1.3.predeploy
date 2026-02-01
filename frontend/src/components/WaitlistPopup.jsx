@@ -173,7 +173,7 @@ export default function WaitlistPopup() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 p-5 sm:p-6 text-center relative flex-shrink-0">
+              <div className="bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900 p-5 sm:p-6 text-center relative flex-shrink-0">
                 <button
                   onClick={handleDismiss}
                   className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-white transition-colors p-1"
