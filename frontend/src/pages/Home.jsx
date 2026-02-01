@@ -124,7 +124,7 @@ export default function Home() {
       >
         {/* Improved gradient - lighter and more premium */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-slate-800/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/40 via-transparent to-amber-900/10" />
         
         {/* Decorative Elements - Enhanced amber glow */}
         <div className="absolute top-20 right-10 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl" />
