@@ -60,7 +60,7 @@ export default function ForLawyers() {
     <div className="min-h-screen bg-light pt-20">
       {/* Header */}
       <section className="bg-dark grain-overlay relative py-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -218,7 +218,7 @@ export default function ForLawyers() {
 
       {/* Pricing */}
       <section className="py-20 bg-dark grain-overlay relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900" />
         <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 lg:px-24 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
