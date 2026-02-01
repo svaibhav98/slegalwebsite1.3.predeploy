@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, Users } from 'lucide-react';
+import { Menu, X, Users, Scale } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 // Google Form URLs (kept for reference in internal pages)
