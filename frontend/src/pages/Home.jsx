@@ -122,8 +122,8 @@ export default function Home() {
         data-testid="hero-section"
         className="relative min-h-screen flex items-center"
       >
-        {/* Improved gradient - lighter and more premium */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        {/* Improved gradient - lighter with green/gold brand colors */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900" />
         <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/40 via-transparent to-amber-900/10" />
         
         {/* Decorative Elements - Enhanced amber glow */}
@@ -444,7 +444,7 @@ export default function Home() {
 
       {/* Trust Section - Updated Gradient */}
       <section data-testid="trust-section" className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-slate-800 to-emerald-900" />
         <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
